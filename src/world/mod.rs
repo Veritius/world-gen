@@ -1,3 +1,8 @@
+pub mod event;
+pub mod person;
+pub mod place;
+pub mod thing;
+
 pub struct WorldPregenConfig {
     pub name: String,
 }
