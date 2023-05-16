@@ -1,9 +1,7 @@
 pub mod config;
 
 use eframe::{egui, Frame, App};
-use crate::world::WorldPregenConfig;
-
-use self::config::{config_ui, Tab, ConfigState};
+use self::config::{config_ui, ConfigState};
 
 pub enum AppState {
     Config(ConfigState),
