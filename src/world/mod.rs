@@ -15,6 +15,7 @@ pub struct WorldPregenConfig {
     pub random_seed: u32,
     pub history_starts_at: u32,
     pub years_to_simulate: u32,
+    pub generation_direction: GenerationDirection,
     pub chaos_multiplier: f32,
 }
 
@@ -24,8 +25,15 @@ impl Default for WorldPregenConfig {
             name: "".to_string(),
             random_seed: rand::thread_rng().gen::<u32>(),
             history_starts_at: 0,
+            generation_direction: GenerationDirection::Forwards,
             years_to_simulate: 100,
             chaos_multiplier: 1.0,
         }
     }
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum GenerationDirection {
+    Forwards,
+    Backwards,
 }

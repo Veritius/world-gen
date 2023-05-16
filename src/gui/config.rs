@@ -57,6 +57,16 @@ fn tab_meta(
     });
 
     ui.horizontal(|ui| {
+        ui.label("History generation direction");
+        egui::ComboBox::new("history_generation_direction", "")
+        .selected_text(format!("{:?}", state.world.generation_direction))
+        .show_ui(ui, |ui| {
+            ui.selectable_value(&mut state.world.generation_direction, crate::world::GenerationDirection::Forwards, "Forwards");
+            ui.selectable_value(&mut state.world.generation_direction, crate::world::GenerationDirection::Backwards, "Backwards");
+        });
+    });
+
+    ui.horizontal(|ui| {
         ui.label("Chaos multiplier");
         ui.add(egui::Slider::new(&mut state.world.chaos_multiplier, 0.1..=2.0));
     });
