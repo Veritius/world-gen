@@ -13,6 +13,7 @@ pub mod soft_limits {
 pub struct WorldPregenConfig {
     pub name: String,
     pub random_seed: u32,
+    pub history_starts_at: u32,
     pub years_to_simulate: u32,
     pub chaos_multiplier: f32,
 }
@@ -22,6 +23,7 @@ impl Default for WorldPregenConfig {
         Self {
             name: "".to_string(),
             random_seed: rand::thread_rng().gen::<u32>(),
+            history_starts_at: 0,
             years_to_simulate: 100,
             chaos_multiplier: 1.0,
         }

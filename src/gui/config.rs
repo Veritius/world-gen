@@ -47,6 +47,11 @@ fn tab_meta(
     });
 
     ui.horizontal(|ui| {
+        ui.label("History start year");
+        ui.add(egui::Slider::new(&mut state.world.history_starts_at, 0..=3000));
+    });
+
+    ui.horizontal(|ui| {
         ui.label("Years to simulate");
         ui.add(egui::Slider::new(&mut state.world.years_to_simulate, MIN_YEARS_TO_SIMULATE..=MAX_YEARS_TO_SIMULATE));
     });
