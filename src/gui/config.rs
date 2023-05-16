@@ -41,7 +41,7 @@ fn tab_meta(
     ui.horizontal(|ui| {
         ui.label("Random seed");
         ui.add(egui::DragValue::new(&mut state.world.random_seed).speed(2.5));
-        if ui.small_button("New seed").clicked() {
+        if ui.button("New seed").clicked() {
             state.world.random_seed = rand::thread_rng().gen::<u32>();
         }
     });
