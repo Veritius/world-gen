@@ -21,11 +21,11 @@ pub fn config_ui(
         ui.selectable_value(&mut state.tab, Tab::Meta, "Meta");
     });
 
-    ui.group(|ui| {
-        match &state.tab {
-            Tab::Meta => tab_meta(ui, state),
-        }
-    });
+    ui.separator();
+
+    match &state.tab {
+        Tab::Meta => tab_meta(ui, state),
+    }
 }
 
 fn tab_meta(
