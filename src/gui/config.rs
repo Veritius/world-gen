@@ -1,5 +1,6 @@
 use eframe::egui;
-use crate::world::WorldPregenConfig;
+use rand::Rng;
+use crate::world::{WorldPregenConfig, soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}};
 
 #[derive(Default)]
 pub struct ConfigState {
@@ -32,5 +33,26 @@ fn tab_meta(
     ui: &mut egui::Ui,
     state: &mut ConfigState,
 ) {
-    ui.add(egui::TextEdit::singleline(&mut state.world.name).hint_text("World name"));
+    ui.horizontal(|ui| {
+        ui.label("World name");
+        ui.add(egui::TextEdit::singleline(&mut state.world.name));
+    });
+
+    ui.horizontal(|ui| {
+        ui.label("Random seed");
+        ui.add(egui::DragValue::new(&mut state.world.random_seed).speed(2.5));
+        if ui.small_button("New seed").clicked() {
+            state.world.random_seed = rand::thread_rng().gen::<u32>();
+        }
+    });
+
+    ui.horizontal(|ui| {
+        ui.label("Years to simulate");
+        ui.add(egui::Slider::new(&mut state.world.years_to_simulate, MIN_YEARS_TO_SIMULATE..=MAX_YEARS_TO_SIMULATE));
+    });
+
+    ui.horizontal(|ui| {
+        ui.label("Chaos multiplier");
+        ui.add(egui::Slider::new(&mut state.world.chaos_multiplier, 0.1..=2.0));
+    });
 }
