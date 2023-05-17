@@ -36,6 +36,9 @@ impl App for WorldGenApp {
     }
 }
 
+#[derive(Hash, PartialEq, Eq, PartialOrd, Ord)]
+struct EntityStringHashable(pub Entity, pub String);
+
 /// Like Bevy's CommandQueue but bad.
 struct KnockoffCommandQueue(Vec<Box<dyn QueueAction>>);
 

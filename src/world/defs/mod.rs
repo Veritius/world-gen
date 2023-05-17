@@ -17,5 +17,5 @@ pub struct Species {
     pub max_age: u32,
 }
 
-#[derive(Component, PartialEq, Eq)]
+#[derive(Component, Clone, PartialEq, Eq)]
 pub struct AssociatedSpecies(pub Entity);

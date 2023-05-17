@@ -4,11 +4,11 @@
 use bevy_ecs::prelude::*;
 
 /// Any entities with this component will have more in-depth information generated.
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct Important;
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct Name(pub String);
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct Age(pub u32);

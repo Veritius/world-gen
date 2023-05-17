@@ -1,11 +1,11 @@
-use std::collections::{HashSet, HashMap};
+use std::{collections::BTreeMap, marker::PhantomData};
 
 use bevy_ecs::prelude::*;
 use eframe::egui;
 use rand::Rng;
 use crate::world::{soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}, WorldPregenConfig, person::{Person, PersonBundle}, thing::{Age, Name, Important}, defs::{Species, SpeciesBundle, AssociatedSpecies}};
 
-use super::{KnockoffCommandQueue, DeleteEntity};
+use super::{KnockoffCommandQueue, DeleteEntity, InsertComponent, EntityStringHashable, RemoveComponent};
 
 pub struct ConfigState {
     tab: Tab,
@@ -142,7 +142,9 @@ fn tab_people(
 
     egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
         // List of available species
-        let mut available_species = HashMap::new();
+        let mut available_species: BTreeMap<Entity, String> = BTreeMap::new();
+        
+        // Add species to map
         let mut query = state.world.query::<(Entity, &Name, &Species)>();
         for (entity, name, species) in query.iter(&mut state.world) {
             if species.humanoid {
@@ -163,19 +165,27 @@ fn tab_people(
                 });
 
                 // Age
-                if age.is_some() {
-                    ui.horizontal(|ui| {
-                        ui.label("Age");
+                ui.horizontal(|ui| {
+                    ui.label("Age");
+                    if age.is_some() {
                         let mut age = age.unwrap();
                         ui.add(egui::DragValue::new(&mut age.0));
-                    });
-                }
+                        if ui.button("Make ageless").clicked() {
+                            cmd.push(Box::new(RemoveComponent::<Age>(entity, PhantomData)));
+                        }
+                    } else {
+                        if ui.button("Add age").clicked() {
+                            cmd.push(Box::new(InsertComponent { entity, component: Age(u32::MIN) }));
+                        }
+                    }
+                });
+
 
                 // Species
                 ui.horizontal(|ui| {
                     ui.label("Species");
                     if let Some(mut species) = species {
-                        egui::ComboBox::new("species", "")
+                        egui::ComboBox::new(EntityStringHashable(entity, "species_choice_box".to_string()), "")
                             .selected_text(available_species.get(&species.0.clone()).unwrap())
                             .show_ui(ui, |ui| {
                                 // List all humanoid species as options
@@ -183,10 +193,15 @@ fn tab_people(
                                     ui.selectable_value(&mut species.as_mut().0, *species_entity, species_name);
                                 }
                             });
+                        if ui.button("Remove").clicked() {
+                            cmd.push(Box::new(RemoveComponent::<AssociatedSpecies>(entity, PhantomData)));
+                        }
                     } else {
-                        if ui.button("Add species").clicked() {
-                            
-                        };
+                        ui.add_enabled_ui(available_species.len() > 0, |ui| {
+                            if ui.button("Add species").clicked() {
+                                cmd.push(Box::new(InsertComponent { entity: entity.clone(), component: AssociatedSpecies(available_species.iter().nth(0).unwrap().0.clone()) }));
+                            };
+                        });
                     } 
                 });
                     
