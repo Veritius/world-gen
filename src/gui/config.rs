@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::*;
 use eframe::egui;
 use rand::Rng;
-use crate::world::{soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}, WorldPregenConfig, person::{Person, Name}};
+use crate::world::{soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}, WorldPregenConfig, person::{Person, Name}, thing::Age};
 
 pub struct ConfigState {
     tab: Tab,
@@ -102,10 +102,8 @@ fn tab_people(
         if ui.button("Add person").clicked() {
             state.world.spawn((
                 Person,
-                Name(vec![
-                    "Some".to_string(),
-                    "Body".to_string()
-                    ]),
+                Name("Some Body".to_string()),
+                Age(32),
             ));
         }
 
@@ -126,16 +124,24 @@ fn tab_people(
     ui.separator();
 
     ui.horizontal_wrapped(|ui| {
-        let mut query = state.world.query_filtered::<&Name, With<Person>>();
-        for name in query.iter(&state.world) {
-            ui.group(|ui| {
-                let mut string = String::new();
-                for word in &name.0 {
-                    string.push_str(&format!("{} ", word));
-                }
+        let mut query = state.world.query_filtered::<(&mut Name, Option<&mut Age>), With<Person>>();
+        for (mut name, age) in query.iter_mut(&mut state.world) {
+            ui.group(|ui| { ui.vertical(|ui| {
+                // Name
+                ui.horizontal(|ui| {
+                    ui.label("Name");
+                    ui.text_edit_singleline(&mut name.0);
+                });
 
-                ui.label(string);
-            });
+                // Age
+                if age.is_some() {
+                    ui.horizontal(|ui| {
+                        ui.label("Age");
+                        let mut age = age.unwrap();
+                        ui.add(egui::DragValue::new(&mut age.0));
+                    });
+                }
+            })});
         }
     });
 }

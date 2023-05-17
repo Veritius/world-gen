@@ -8,4 +8,4 @@ use bevy_ecs::prelude::*;
 pub struct Person;
 
 #[derive(Component)]
-pub struct Name(pub Vec<String>);
+pub struct Name(pub String);
