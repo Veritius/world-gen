@@ -185,15 +185,20 @@ fn tab_people(
                 ui.horizontal(|ui| {
                     ui.label("Species");
                     if let Some(mut species) = species {
-                        egui::ComboBox::new(EntityStringHashable(entity, "species_choice_box".to_string()), "")
-                            .selected_text(available_species.get(&species.0.clone()).unwrap())
+                        let spec = available_species.get(&species.0.clone());
+                        if spec.is_some() {
+                            egui::ComboBox::new(EntityStringHashable(entity, "species_choice_box".to_string()), "")
+                            .selected_text(spec.unwrap())
                             .show_ui(ui, |ui| {
                                 // List all humanoid species as options
                                 for (species_entity, species_name) in &available_species {
                                     ui.selectable_value(&mut species.as_mut().0, *species_entity, species_name);
                                 }
                             });
-                        if ui.button("Remove").clicked() {
+                            if ui.button("Remove").clicked() {
+                                cmd.push(Box::new(RemoveComponent::<AssociatedSpecies>(entity, PhantomData)));
+                            }
+                        } else {
                             cmd.push(Box::new(RemoveComponent::<AssociatedSpecies>(entity, PhantomData)));
                         }
                     } else {
