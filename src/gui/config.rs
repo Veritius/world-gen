@@ -169,7 +169,7 @@ fn tab_people(
                     ui.label("Age");
                     if age.is_some() {
                         let mut age = age.unwrap();
-                        ui.add(egui::DragValue::new(&mut age.0));
+                        ui.add(egui::DragValue::new(&mut age.0).suffix(" years old"));
                         if ui.button("Make ageless").clicked() {
                             cmd.push(Box::new(RemoveComponent::<Age>(entity, PhantomData)));
                         }
