@@ -64,7 +64,7 @@ pub fn config_ui(
 fn tab_meta(
     ui: &mut egui::Ui,
     state: &mut ConfigState,
-    cmd: &mut KnockoffCommandQueue,
+    _cmd: &mut KnockoffCommandQueue,
 ) {
     let world = &mut *state.world.resource_mut::<WorldPregenConfig>();
 
@@ -225,7 +225,7 @@ fn tab_defs(
     state: &mut ConfigState,
     cmd: &mut KnockoffCommandQueue,
 ) {
-    egui::ScrollArea::vertical().show(ui, |ui| {
+    egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
         ui.collapsing("Species", |ui| {
             ui.horizontal(|ui| {
                 if ui.button("New creature").clicked() {
