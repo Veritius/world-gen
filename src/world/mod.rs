@@ -10,6 +10,7 @@ pub mod soft_limits {
     pub const MAX_YEARS_TO_SIMULATE: u32 = 1000;
 }
 
+#[derive(Resource)]
 pub struct WorldPregenConfig {
     pub name: String,
     pub random_seed: u32,
@@ -37,3 +38,9 @@ pub enum GenerationDirection {
     Forwards,
     Backwards,
 }
+
+use bevy_ecs::{prelude::Component, system::Resource};
+
+/// The age of this entity.
+#[derive(Component)]
+pub struct EntityAge(u32);
