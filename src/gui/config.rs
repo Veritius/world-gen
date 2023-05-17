@@ -1,7 +1,7 @@
-use bevy_ecs::world::World;
+use bevy_ecs::prelude::*;
 use eframe::egui;
 use rand::Rng;
-use crate::world::{soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}, WorldPregenConfig};
+use crate::world::{soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}, WorldPregenConfig, person::{Person, Name}};
 
 pub struct ConfigState {
     tab: Tab,
@@ -24,6 +24,9 @@ impl Default for ConfigState {
 pub enum Tab {
     #[default]
     Meta,
+    People,
+    Events,
+    Places,
 }
 
 pub fn config_ui(
@@ -32,12 +35,17 @@ pub fn config_ui(
 ) {
     ui.horizontal(|ui| {
         ui.selectable_value(&mut state.tab, Tab::Meta, "Meta");
+        
+        ui.selectable_value(&mut state.tab, Tab::People, "People");
     });
 
     ui.separator();
 
     match &state.tab {
         Tab::Meta => tab_meta(ui, state),
+        Tab::People => tab_people(ui, state),
+        Tab::Events => todo!(),
+        Tab::Places => todo!(),
     }
 }
 
@@ -83,5 +91,51 @@ fn tab_meta(
     ui.horizontal(|ui| {
         ui.label("Chaos multiplier");
         ui.add(egui::Slider::new(&mut world.chaos_multiplier, 0.1..=2.0));
+    });
+}
+
+fn tab_people(
+    ui: &mut egui::Ui,
+    state: &mut ConfigState,
+) {
+    ui.horizontal(|ui| {
+        if ui.button("Add person").clicked() {
+            state.world.spawn((
+                Person,
+                Name(vec![
+                    "Some".to_string(),
+                    "Body".to_string()
+                    ]),
+            ));
+        }
+
+        if ui.button("Clear people").clicked() {
+            let mut query = state.world.query_filtered::<Entity, With<Person>>();
+
+            let mut entities = vec![];
+            for entity in query.iter(&state.world) {
+                entities.push(entity);
+            }
+
+            for entity in entities {
+                state.world.despawn(entity);
+            }
+        }
+    });
+
+    ui.separator();
+
+    ui.horizontal_wrapped(|ui| {
+        let mut query = state.world.query_filtered::<&Name, With<Person>>();
+        for name in query.iter(&state.world) {
+            ui.group(|ui| {
+                let mut string = String::new();
+                for word in &name.0 {
+                    string.push_str(&format!("{} ", word));
+                }
+
+                ui.label(string);
+            });
+        }
     });
 }
