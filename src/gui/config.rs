@@ -1,7 +1,9 @@
+use std::collections::HashSet;
+
 use bevy_ecs::prelude::*;
 use eframe::egui;
 use rand::Rng;
-use crate::world::{soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}, WorldPregenConfig, person::{Person, Name}, thing::Age};
+use crate::world::{soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}, WorldPregenConfig, person::{Person, PersonBundle}, thing::{Age, Name, Important}};
 
 pub struct ConfigState {
     tab: Tab,
@@ -27,6 +29,7 @@ pub enum Tab {
     People,
     Events,
     Places,
+    Definitions,
 }
 
 pub fn config_ui(
@@ -35,8 +38,8 @@ pub fn config_ui(
 ) {
     ui.horizontal(|ui| {
         ui.selectable_value(&mut state.tab, Tab::Meta, "Meta");
-        
         ui.selectable_value(&mut state.tab, Tab::People, "People");
+        ui.selectable_value(&mut state.tab, Tab::Definitions, "Definitions");
     });
 
     ui.separator();
@@ -46,6 +49,7 @@ pub fn config_ui(
         Tab::People => tab_people(ui, state),
         Tab::Events => todo!(),
         Tab::Places => todo!(),
+        Tab::Definitions => tab_defs(ui, state),
     }
 }
 
@@ -98,25 +102,26 @@ fn tab_people(
     ui: &mut egui::Ui,
     state: &mut ConfigState,
 ) {
+    let mut to_delete = HashSet::new();
+
     ui.horizontal(|ui| {
         if ui.button("Add person").clicked() {
             state.world.spawn((
-                Person,
-                Name("Some Body".to_string()),
-                Age(32),
+                PersonBundle {
+                    person: Person,
+                    name: Name("Urist McHands".to_string()),
+                    age: Age(44),
+                },
+                // Custom characters will always be marked important.
+                Important,
             ));
         }
 
         if ui.button("Clear people").clicked() {
             let mut query = state.world.query_filtered::<Entity, With<Person>>();
 
-            let mut entities = vec![];
             for entity in query.iter(&state.world) {
-                entities.push(entity);
-            }
-
-            for entity in entities {
-                state.world.despawn(entity);
+                to_delete.insert(entity);
             }
         }
     });
@@ -124,8 +129,8 @@ fn tab_people(
     ui.separator();
 
     ui.horizontal_wrapped(|ui| {
-        let mut query = state.world.query_filtered::<(&mut Name, Option<&mut Age>), With<Person>>();
-        for (mut name, age) in query.iter_mut(&mut state.world) {
+        let mut query = state.world.query_filtered::<(Entity, &mut Name, Option<&mut Age>), With<Person>>();
+        for (entity, mut name, age) in query.iter_mut(&mut state.world) {
             ui.group(|ui| { ui.vertical(|ui| {
                 // Name
                 ui.horizontal(|ui| {
@@ -141,7 +146,22 @@ fn tab_people(
                         ui.add(egui::DragValue::new(&mut age.0));
                     });
                 }
+                
+                if ui.button("Delete").clicked() {
+                    to_delete.insert(entity);
+                }
             })});
         }
     });
+
+    for entity in to_delete {
+        state.world.despawn(entity);
+    }
+}
+
+fn tab_defs(
+    _ui: &mut egui::Ui,
+    _state: &mut ConfigState,
+) {
+
 }

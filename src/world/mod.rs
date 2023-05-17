@@ -3,6 +3,7 @@ use rand::Rng;
 pub mod event;
 pub mod person;
 pub mod place;
+pub mod defs;
 pub mod thing;
 
 pub mod soft_limits {
