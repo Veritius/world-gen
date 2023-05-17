@@ -1,9 +1,11 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 
 use bevy_ecs::prelude::*;
 use eframe::egui;
 use rand::Rng;
-use crate::world::{soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}, WorldPregenConfig, person::{Person, PersonBundle}, thing::{Age, Name, Important}, defs::{Species, SpeciesBundle}};
+use crate::world::{soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}, WorldPregenConfig, person::{Person, PersonBundle}, thing::{Age, Name, Important}, defs::{Species, SpeciesBundle, AssociatedSpecies}};
+
+use super::{KnockoffCommandQueue, DeleteEntity};
 
 pub struct ConfigState {
     tab: Tab,
@@ -46,25 +48,23 @@ pub fn config_ui(
 
     ui.separator();
 
-    let mut to_delete = HashSet::new();
+    let mut cmd = KnockoffCommandQueue(Vec::new());
 
     match &state.tab {
-        Tab::Meta => tab_meta(ui, state, &mut to_delete),
-        Tab::People { search_filter: _ } => tab_people(ui, state, &mut to_delete),
+        Tab::Meta => tab_meta(ui, state, &mut cmd),
+        Tab::People { search_filter: _ } => tab_people(ui, state, &mut cmd),
         Tab::Events => todo!(),
         Tab::Places => todo!(),
-        Tab::Definitions => tab_defs(ui, state, &mut to_delete),
+        Tab::Definitions => tab_defs(ui, state, &mut cmd),
     }
 
-    for entity in to_delete {
-        state.world.despawn(entity);
-    }
+    cmd.execute(&mut state.world);
 }
 
 fn tab_meta(
     ui: &mut egui::Ui,
     state: &mut ConfigState,
-    to_delete: &mut HashSet<Entity>,
+    cmd: &mut KnockoffCommandQueue,
 ) {
     let world = &mut *state.world.resource_mut::<WorldPregenConfig>();
 
@@ -110,7 +110,7 @@ fn tab_meta(
 fn tab_people(
     ui: &mut egui::Ui,
     state: &mut ConfigState,
-    to_delete: &mut HashSet<Entity>,
+    cmd: &mut KnockoffCommandQueue,
 ) {
     if let Tab::People { ref mut search_filter } = &mut state.tab { // enum start
 
@@ -131,7 +131,7 @@ fn tab_people(
             let mut query = state.world.query_filtered::<Entity, With<Person>>();
 
             for entity in query.iter(&state.world) {
-                to_delete.insert(entity);
+                cmd.push(Box::new(DeleteEntity(entity)));
             }
         }
 
@@ -141,8 +141,17 @@ fn tab_people(
     ui.separator();
 
     egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
-        let mut query = state.world.query_filtered::<(Entity, &mut Name, Option<&mut Age>), With<Person>>();
-        for (entity, mut name, age) in query.iter_mut(&mut state.world) {
+        // List of available species
+        let mut available_species = HashMap::new();
+        let mut query = state.world.query::<(Entity, &Name, &Species)>();
+        for (entity, name, species) in query.iter(&mut state.world) {
+            if species.humanoid {
+                available_species.insert(entity, name.0.clone());
+            }
+        }
+
+        let mut query = state.world.query_filtered::<(Entity, &mut Name, Option<&mut Age>, Option<&mut AssociatedSpecies>), With<Person>>();
+        for (entity, mut name, age, species) in query.iter_mut(&mut state.world) {
             // Filter out entries
             if search_filter != "" && !name.0.to_lowercase().starts_with(&*search_filter.to_lowercase()) { return; }
 
@@ -161,9 +170,28 @@ fn tab_people(
                         ui.add(egui::DragValue::new(&mut age.0));
                     });
                 }
+
+                // Species
+                ui.horizontal(|ui| {
+                    ui.label("Species");
+                    if let Some(mut species) = species {
+                        egui::ComboBox::new("species", "")
+                            .selected_text(available_species.get(&species.0.clone()).unwrap())
+                            .show_ui(ui, |ui| {
+                                // List all humanoid species as options
+                                for (species_entity, species_name) in &available_species {
+                                    ui.selectable_value(&mut species.as_mut().0, *species_entity, species_name);
+                                }
+                            });
+                    } else {
+                        if ui.button("Add species").clicked() {
+                            
+                        };
+                    } 
+                });
                     
                 if ui.button("Delete").clicked() {
-                    to_delete.insert(entity);
+                    cmd.push(Box::new(DeleteEntity(entity)));
                 }
             });
         }
@@ -175,7 +203,7 @@ fn tab_people(
 fn tab_defs(
     ui: &mut egui::Ui,
     state: &mut ConfigState,
-    to_delete: &mut HashSet<Entity>,
+    cmd: &mut KnockoffCommandQueue,
 ) {
     egui::ScrollArea::vertical().show(ui, |ui| {
         ui.collapsing("Species", |ui| {
@@ -211,7 +239,7 @@ fn tab_defs(
                 if ui.button("Delete all").clicked() {
                     let mut query = state.world.query_filtered::<Entity, With<Species>>();
                     for entity in query.iter(&state.world) {
-                        to_delete.insert(entity);
+                        cmd.push(Box::new(DeleteEntity(entity)));
                     }
                 }
             });
@@ -255,7 +283,7 @@ fn tab_defs(
 
                     // Delete button
                     if ui.button("Delete").clicked() {
-                        to_delete.insert(entity);
+                        cmd.push(Box::new(DeleteEntity(entity)));
                     }
                 });
             }

@@ -1,4 +1,4 @@
-use bevy_ecs::prelude::{Component, Bundle};
+use bevy_ecs::prelude::*;
 use super::thing::Name;
 
 #[derive(Bundle)]
@@ -16,3 +16,6 @@ pub struct Species {
     /// The maximum age at which this creature will die. Approaching this age will increase harm to the creature.
     pub max_age: u32,
 }
+
+#[derive(Component, PartialEq, Eq)]
+pub struct AssociatedSpecies(pub Entity);
