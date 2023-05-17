@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use bevy_ecs::prelude::*;
 use eframe::egui;
 use rand::Rng;
-use crate::world::{soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}, WorldPregenConfig, person::{Person, PersonBundle}, thing::{Age, Name, Important}};
+use crate::world::{soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}, WorldPregenConfig, person::{Person, PersonBundle}, thing::{Age, Name, Important}, defs::{Species, SpeciesBundle}};
 
 pub struct ConfigState {
     tab: Tab,
@@ -46,18 +46,25 @@ pub fn config_ui(
 
     ui.separator();
 
+    let mut to_delete = HashSet::new();
+
     match &state.tab {
-        Tab::Meta => tab_meta(ui, state),
-        Tab::People { search_filter: _ } => tab_people(ui, state),
+        Tab::Meta => tab_meta(ui, state, &mut to_delete),
+        Tab::People { search_filter: _ } => tab_people(ui, state, &mut to_delete),
         Tab::Events => todo!(),
         Tab::Places => todo!(),
-        Tab::Definitions => tab_defs(ui, state),
+        Tab::Definitions => tab_defs(ui, state, &mut to_delete),
+    }
+
+    for entity in to_delete {
+        state.world.despawn(entity);
     }
 }
 
 fn tab_meta(
     ui: &mut egui::Ui,
     state: &mut ConfigState,
+    to_delete: &mut HashSet<Entity>,
 ) {
     let world = &mut *state.world.resource_mut::<WorldPregenConfig>();
 
@@ -103,8 +110,8 @@ fn tab_meta(
 fn tab_people(
     ui: &mut egui::Ui,
     state: &mut ConfigState,
+    to_delete: &mut HashSet<Entity>,
 ) {
-    let mut to_delete = HashSet::new();
     if let Tab::People { ref mut search_filter } = &mut state.tab { // enum start
 
     ui.horizontal(|ui| {
@@ -162,16 +169,96 @@ fn tab_people(
         }
     });
 
-    for entity in to_delete {
-        state.world.despawn(entity);
-    }
-
     } // enum break
 }
 
 fn tab_defs(
-    _ui: &mut egui::Ui,
-    _state: &mut ConfigState,
+    ui: &mut egui::Ui,
+    state: &mut ConfigState,
+    to_delete: &mut HashSet<Entity>,
 ) {
+    egui::ScrollArea::vertical().show(ui, |ui| {
+        ui.collapsing("Species", |ui| {
+            ui.horizontal(|ui| {
+                if ui.button("New creature").clicked() {
+                    state.world.spawn((
+                        SpeciesBundle {
+                            name: Name("New creature".to_string()),
+                            species: Species {
+                                humanoid: false,
+                                maturity_age: 2,
+                                max_age: 20,
+                            },
+                        },
+                        Important,
+                    ));
+                }
+        
+                if ui.button("New humanoid").clicked() {
+                    state.world.spawn((
+                        SpeciesBundle {
+                            name: Name("New humanoid".to_string()),
+                            species: Species {
+                                humanoid: true,
+                                maturity_age: 18,
+                                max_age: 100,
+                            },
+                        },
+                        Important,
+                    ));
+                }
 
+                if ui.button("Delete all").clicked() {
+                    let mut query = state.world.query_filtered::<Entity, With<Species>>();
+                    for entity in query.iter(&state.world) {
+                        to_delete.insert(entity);
+                    }
+                }
+            });
+            
+            let mut query = state.world.query::<(Entity, &mut Name, &mut Species)>();
+            for (entity, mut name, mut species) in query.iter_mut(&mut state.world) {
+                egui::CollapsingHeader::new(name.0.clone()).id_source(entity).show(ui, |ui| {
+                    // Species name
+                    ui.horizontal(|ui| {
+                        ui.label("Name");
+                        ui.text_edit_singleline(&mut name.0);
+                    });
+    
+                    // Humanoid
+                    ui.horizontal(|ui| {
+                        ui.label("Humanoid");
+                        ui.checkbox(&mut species.humanoid, "");
+                    });
+    
+                    let is_humanoid: bool = species.humanoid;
+    
+                    // Age of maturity
+                    ui.horizontal(|ui| {
+                        ui.label("Matures at");
+    
+                        let mut dragvalue = egui::DragValue::new(&mut species.maturity_age).suffix(" years");
+                        if is_humanoid {
+                            dragvalue = dragvalue.clamp_range(18..=u32::MAX);
+                        }
+                        
+                        ui.add(dragvalue);
+                    });
+    
+                    let maturity_age: u32 = species.maturity_age;
+    
+                    // Max age
+                    ui.horizontal(|ui| {
+                        ui.label("Max age");
+                        ui.add(egui::DragValue::new(&mut species.max_age).suffix(" years").clamp_range(maturity_age..=u32::MAX));
+                    });
+
+                    // Delete button
+                    if ui.button("Delete").clicked() {
+                        to_delete.insert(entity);
+                    }
+                });
+            }
+        });
+    });
 }

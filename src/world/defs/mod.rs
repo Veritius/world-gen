@@ -9,6 +9,8 @@ pub struct SpeciesBundle {
 
 #[derive(Component)]
 pub struct Species {
+    /// Is this species humanoid?
+    pub humanoid: bool,
     /// The age at which this creature is considered fully formed or matured.
     pub maturity_age: u32,
     /// The maximum age at which this creature will die. Approaching this age will increase harm to the creature.
