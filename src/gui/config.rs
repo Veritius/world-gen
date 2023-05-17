@@ -26,7 +26,9 @@ impl Default for ConfigState {
 pub enum Tab {
     #[default]
     Meta,
-    People,
+    People {
+        search_filter: String,
+    },
     Events,
     Places,
     Definitions,
@@ -38,7 +40,7 @@ pub fn config_ui(
 ) {
     ui.horizontal(|ui| {
         ui.selectable_value(&mut state.tab, Tab::Meta, "Meta");
-        ui.selectable_value(&mut state.tab, Tab::People, "People");
+        ui.selectable_value(&mut state.tab, Tab::People { search_filter: "".to_string() }, "People");
         ui.selectable_value(&mut state.tab, Tab::Definitions, "Definitions");
     });
 
@@ -46,7 +48,7 @@ pub fn config_ui(
 
     match &state.tab {
         Tab::Meta => tab_meta(ui, state),
-        Tab::People => tab_people(ui, state),
+        Tab::People { search_filter: _ } => tab_people(ui, state),
         Tab::Events => todo!(),
         Tab::Places => todo!(),
         Tab::Definitions => tab_defs(ui, state),
@@ -103,6 +105,7 @@ fn tab_people(
     state: &mut ConfigState,
 ) {
     let mut to_delete = HashSet::new();
+    if let Tab::People { ref mut search_filter } = &mut state.tab { // enum start
 
     ui.horizontal(|ui| {
         if ui.button("Add person").clicked() {
@@ -124,14 +127,19 @@ fn tab_people(
                 to_delete.insert(entity);
             }
         }
+
+        egui::TextEdit::singleline(search_filter).hint_text("Search by name").show(ui);
     });
 
     ui.separator();
 
-    ui.horizontal_wrapped(|ui| {
+    egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
         let mut query = state.world.query_filtered::<(Entity, &mut Name, Option<&mut Age>), With<Person>>();
         for (entity, mut name, age) in query.iter_mut(&mut state.world) {
-            ui.group(|ui| { ui.vertical(|ui| {
+            // Filter out entries
+            if search_filter != "" && !name.0.to_lowercase().starts_with(&*search_filter.to_lowercase()) { return; }
+
+            egui::CollapsingHeader::new(name.0.clone()).id_source(entity).show(ui, |ui| {
                 // Name
                 ui.horizontal(|ui| {
                     ui.label("Name");
@@ -146,17 +154,19 @@ fn tab_people(
                         ui.add(egui::DragValue::new(&mut age.0));
                     });
                 }
-                
+                    
                 if ui.button("Delete").clicked() {
                     to_delete.insert(entity);
                 }
-            })});
+            });
         }
     });
 
     for entity in to_delete {
         state.world.despawn(entity);
     }
+
+    } // enum break
 }
 
 fn tab_defs(
