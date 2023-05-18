@@ -33,9 +33,9 @@ impl App for WorldGenApp {
                 Ok(value) => {
                     match value {
                         // The simulation is frozen and can be edited
-                        Left(data) => edit_ui(ui, data),
+                        Left(data) => edit_ui(ui, &mut self.state, data),
                         // The simulation is running and the boundary can be read
-                        Right(boundary) => view_ui(ui, boundary),
+                        Right(boundary) => view_ui(ui, &mut self.state, boundary),
                     }
                 },
                 // The simulation boundary is poisoned
