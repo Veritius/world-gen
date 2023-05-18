@@ -51,6 +51,7 @@ impl Simulation {
             }
         });
 
+        // Change simulation state
         self.state = SimulationState::Executing {
             boundary: status.clone(),
             thread,
@@ -83,8 +84,8 @@ impl Simulation {
         }
 
         // Wait for thread
-        if let Ok(thread) = thread.join() {
-            self.state = SimulationState::Frozen(thread);
+        if let Ok(data) = thread.join() {
+            self.state = SimulationState::Frozen(data);
             // Success!
             return Ok(());
         } else {
