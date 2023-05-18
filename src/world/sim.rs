@@ -1,8 +1,10 @@
-use std::{sync::{RwLock, Arc}, thread::{JoinHandle, self}};
+use std::{sync::{RwLock, Arc, RwLockReadGuard}, thread::{JoinHandle, self}};
 use bevy_ecs::{world::World, schedule::Schedule, system::Resource};
+use either::Either::{self, Left, Right};
 
 pub type Boundary = Arc<RwLock<SimulationBoundary>>;
 
+/// The simulation of the world.
 pub struct Simulation {
     state: SimulationState,
 }
@@ -17,6 +19,25 @@ impl Simulation {
                     world,
                 }
             )
+        }
+    }
+
+    /// Returns either a mutable reference to the `SimulationData` if the simulation is frozen, a `RwLockReadGuard<SimulationBoundary>` if executing, or a `SimulationError` if the boundary is poisoned.
+    pub fn current(&mut self) -> Result<Either<&mut SimulationData, RwLockReadGuard<SimulationBoundary>>, SimulationError> {
+        match &mut self.state {
+            SimulationState::Frozen(ref mut data) => {
+                return Ok(Left(data))
+            },
+            SimulationState::Executing { boundary, thread: _ } => {
+                match boundary.read() {
+                    Ok(boundary) => {
+                        return Ok(Right(boundary))
+                    },
+                    Err(_) => {
+                        return Err(SimulationError::BoundaryPoisoned)
+                    }
+                }
+            },
         }
     }
 
@@ -101,7 +122,7 @@ impl Simulation {
     }
 }
 
-enum SimulationState {
+pub enum SimulationState {
     /// The simulation is frozen, and mutably accessible.
     Frozen(SimulationData),
 
@@ -132,6 +153,7 @@ pub struct SimulationData {
     schedule: Schedule,
     world: World,
 }
+
 /// Allows communication between the GUI and the simulation thread.
 pub struct SimulationBoundary {
     /// If `true`, the simulation will freeze on the next tick.

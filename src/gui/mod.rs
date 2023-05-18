@@ -1,23 +1,26 @@
-pub mod config;
+mod edit;
+mod view;
 
-use bevy_ecs::prelude::Entity;
+use std::collections::BTreeMap;
+
+use bevy_ecs::{prelude::Entity, world::World, schedule::Schedule};
 use eframe::{egui, Frame, App};
-use self::config::{config_ui, ConfigState};
+use either::Either::{Right, Left};
+use crate::world::sim::Simulation;
 
-pub enum AppState {
-    Config(ConfigState),
-    Generating,
-    Finished,
-}
+use self::view::view_ui;
+use self::edit::edit_ui;
 
 pub struct WorldGenApp {
-    pub state: AppState,
+    simulation: Simulation,
+    state: BTreeMap<String, String>,
 }
 
 impl Default for WorldGenApp {
     fn default() -> Self {
         Self {
-            state: AppState::Config(ConfigState::default())
+            simulation: Simulation::new(World::new(), Schedule::new()),
+            state: BTreeMap::new(),
         }
     }
 }
@@ -25,10 +28,19 @@ impl Default for WorldGenApp {
 impl App for WorldGenApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            match &mut self.state {
-                AppState::Config(ref mut cfg) => config_ui(ui, cfg),
-                AppState::Generating => todo!(),
-                AppState::Finished => todo!(),
+            // Show a different UI based on the simulation state
+            match self.simulation.current() {
+                Ok(value) => {
+                    match value {
+                        // The simulation is frozen and can be edited
+                        Left(data) => edit_ui(ui, data),
+                        // The simulation is running and the boundary can be read
+                        Right(boundary) => view_ui(ui, boundary),
+                    }
+                },
+                // The simulation boundary is poisoned
+                // TODO: Handle this
+                Err(_) => todo!(),
             }
         });
     }
