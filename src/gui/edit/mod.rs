@@ -24,10 +24,10 @@ pub(super) fn edit_ui(
     let current_tab = state.get_mut(TAB_KEY).unwrap();
 
     // Tab change buttons
-    egui::ScrollArea::horizontal().auto_shrink([true, false]).show(ui, |ui| {
+    egui::ScrollArea::horizontal().auto_shrink([false, true]).show(ui, |ui| {
         ui.horizontal(|ui| {
             ui.selectable_value(current_tab, "Meta".to_owned(), "Meta");
-            ui.selectable_value(current_tab, "People".to_owned(), "Historical Figures");    
+            ui.selectable_value(current_tab, "People".to_owned(), "Historical Figures");
         });
     });
 
