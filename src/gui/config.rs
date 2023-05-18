@@ -1,9 +1,9 @@
 use std::{collections::BTreeMap, marker::PhantomData};
-use bevy_ecs::prelude::*;
+use bevy_ecs::{prelude::*, system::{CommandQueue, Despawn, Remove, Insert}};
 use eframe::egui;
 use rand::Rng;
 use crate::world::{soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}, WorldPregenConfig, person::{Person, PersonBundle}, thing::{Age, Name, Important}, defs::species::{Species, SpeciesBundle, AssociatedSpecies}};
-use super::{KnockoffCommandQueue, DeleteEntity, InsertComponent, EntityStringHashable, RemoveComponent};
+use super::EntityStringHashable;
 
 pub struct ConfigState {
     tab: Tab,
@@ -46,7 +46,7 @@ pub fn config_ui(
 
     ui.separator();
 
-    let mut cmd = KnockoffCommandQueue(Vec::new());
+    let mut cmd = CommandQueue::default();
 
     match &state.tab {
         Tab::Meta => tab_meta(ui, state, &mut cmd),
@@ -56,13 +56,13 @@ pub fn config_ui(
         Tab::Definitions => tab_defs(ui, state, &mut cmd),
     }
 
-    cmd.execute(&mut state.world);
+    cmd.apply(&mut state.world);
 }
 
 fn tab_meta(
     ui: &mut egui::Ui,
     state: &mut ConfigState,
-    _cmd: &mut KnockoffCommandQueue,
+    _cmd: &mut CommandQueue,
 ) {
     let world = &mut *state.world.resource_mut::<WorldPregenConfig>();
 
@@ -108,7 +108,7 @@ fn tab_meta(
 fn tab_people(
     ui: &mut egui::Ui,
     state: &mut ConfigState,
-    cmd: &mut KnockoffCommandQueue,
+    cmd: &mut CommandQueue,
 ) {
     if let Tab::People { ref mut search_filter } = &mut state.tab { // enum start
 
@@ -129,7 +129,7 @@ fn tab_people(
             let mut query = state.world.query_filtered::<Entity, With<Person>>();
 
             for entity in query.iter(&state.world) {
-                cmd.push(Box::new(DeleteEntity(entity)));
+                cmd.push(Despawn { entity });
             }
         }
 
@@ -169,11 +169,11 @@ fn tab_people(
                         let mut age = age.unwrap();
                         ui.add(egui::DragValue::new(&mut age.0).suffix(" years old"));
                         if ui.button("Make ageless").clicked() {
-                            cmd.push(Box::new(RemoveComponent::<Age>(entity, PhantomData)));
+                            cmd.push(Remove::<Age> { entity, phantom: PhantomData });
                         }
                     } else {
                         if ui.button("Add age").clicked() {
-                            cmd.push(Box::new(InsertComponent { entity, component: Age(u32::MIN) }));
+                            cmd.push(Insert::<Age> { entity, bundle: Age(0) });
                         }
                     }
                 });
@@ -194,22 +194,22 @@ fn tab_people(
                                 }
                             });
                             if ui.button("Remove").clicked() {
-                                cmd.push(Box::new(RemoveComponent::<AssociatedSpecies>(entity, PhantomData)));
+                                cmd.push(Remove::<AssociatedSpecies> { entity, phantom: PhantomData });
                             }
                         } else {
-                            cmd.push(Box::new(RemoveComponent::<AssociatedSpecies>(entity, PhantomData)));
+                            cmd.push(Remove::<AssociatedSpecies> { entity, phantom: PhantomData });
                         }
                     } else {
                         ui.add_enabled_ui(available_species.len() > 0, |ui| {
                             if ui.button("Add species").clicked() {
-                                cmd.push(Box::new(InsertComponent { entity: entity.clone(), component: AssociatedSpecies(available_species.iter().nth(0).unwrap().0.clone()) }));
+                                cmd.push(Insert::<AssociatedSpecies> { entity, bundle: AssociatedSpecies(available_species.iter().nth(0).unwrap().0.clone()) });
                             };
                         });
                     } 
                 });
                     
                 if ui.button("Delete").clicked() {
-                    cmd.push(Box::new(DeleteEntity(entity)));
+                    cmd.push(Despawn { entity });
                 }
             });
         }
@@ -221,7 +221,7 @@ fn tab_people(
 fn tab_defs(
     ui: &mut egui::Ui,
     state: &mut ConfigState,
-    cmd: &mut KnockoffCommandQueue,
+    cmd: &mut CommandQueue,
 ) {
     egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
         ui.collapsing("Species", |ui| {
@@ -257,7 +257,7 @@ fn tab_defs(
                 if ui.button("Delete all").clicked() {
                     let mut query = state.world.query_filtered::<Entity, With<Species>>();
                     for entity in query.iter(&state.world) {
-                        cmd.push(Box::new(DeleteEntity(entity)));
+                        cmd.push(Despawn { entity });
                     }
                 }
             });
@@ -301,7 +301,7 @@ fn tab_defs(
 
                     // Delete button
                     if ui.button("Delete").clicked() {
-                        cmd.push(Box::new(DeleteEntity(entity)));
+                        cmd.push(Despawn { entity });
                     }
                 });
             }
