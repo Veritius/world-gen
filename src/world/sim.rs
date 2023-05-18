@@ -150,8 +150,8 @@ pub enum SimulationError {
 }
 
 pub struct SimulationData {
-    schedule: Schedule,
-    world: World,
+    pub schedule: Schedule,
+    pub world: World,
 }
 
 /// Allows communication between the GUI and the simulation thread.

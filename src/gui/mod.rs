@@ -3,6 +3,7 @@ mod view;
 
 use std::collections::BTreeMap;
 
+use bevy_ecs::system::CommandQueue;
 use bevy_ecs::{prelude::Entity, world::World, schedule::Schedule};
 use eframe::{egui, Frame, App};
 use either::Either::{Right, Left};
@@ -33,7 +34,11 @@ impl App for WorldGenApp {
                 Ok(value) => {
                     match value {
                         // The simulation is frozen and can be edited
-                        Left(data) => edit_ui(ui, &mut self.state, data),
+                        Left(data) => {
+                            let mut queue = CommandQueue::default();
+                            edit_ui(ui, &mut self.state, &mut queue, data);
+                            queue.apply(&mut data.world);
+                        },
                         // The simulation is running and the boundary can be read
                         Right(boundary) => view_ui(ui, &mut self.state, boundary),
                     }
