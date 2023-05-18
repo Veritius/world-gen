@@ -1,10 +1,8 @@
 use std::{collections::BTreeMap, marker::PhantomData};
-
 use bevy_ecs::prelude::*;
 use eframe::egui;
 use rand::Rng;
-use crate::world::{soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}, WorldPregenConfig, person::{Person, PersonBundle}, thing::{Age, Name, Important}, defs::{Species, SpeciesBundle, AssociatedSpecies}};
-
+use crate::world::{soft_limits::{MAX_YEARS_TO_SIMULATE, MIN_YEARS_TO_SIMULATE}, WorldPregenConfig, person::{Person, PersonBundle}, thing::{Age, Name, Important}, defs::species::{Species, SpeciesBundle, AssociatedSpecies}};
 use super::{KnockoffCommandQueue, DeleteEntity, InsertComponent, EntityStringHashable, RemoveComponent};
 
 pub struct ConfigState {
