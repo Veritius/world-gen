@@ -1,5 +1,7 @@
 use rand::Rng;
 
+pub mod sim;
+
 pub mod event;
 pub mod person;
 pub mod place;
