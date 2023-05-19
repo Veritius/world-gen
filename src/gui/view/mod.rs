@@ -26,7 +26,7 @@ fn stat_plots(
     sim: RwLockReadGuard<SimulationBoundary>,
 ) {
     // Tick time display
-    ui.label("Time taken per simulation step");
+    ui.label("Time taken per simulation step (in seconds)");
     Plot::new("tick_time_plot")
     .height(100.0)
     .show(ui, |plot_ui| {
