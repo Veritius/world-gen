@@ -179,6 +179,9 @@ fn character_editor(
                     });
                     ui.end_row();
 
+                    // Adjust age as per species
+                    age.0 = age.0.min(max_age);
+
                     // Age
                     ui.label("Age");
                     if use_slider {
