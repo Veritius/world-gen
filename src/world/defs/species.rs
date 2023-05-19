@@ -7,7 +7,7 @@ pub struct SpeciesBundle {
     pub species: Species,
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct Species {
     /// Is this species humanoid?
     pub humanoid: bool,

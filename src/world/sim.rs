@@ -1,6 +1,11 @@
-use std::{sync::{RwLock, Arc, RwLockReadGuard}, thread::{JoinHandle, self}};
-use bevy_ecs::{world::World, schedule::Schedule, system::Resource};
+use std::{sync::{RwLock, Arc, RwLockReadGuard}, thread::{JoinHandle, self}, time::Instant};
+use bevy_ecs::{world::World, schedule::Schedule, system::Resource, prelude::Entity, query::With};
 use either::Either::{self, Left, Right};
+use crate::world::{defs::SimulationConfig, person::Person};
+use super::defs::{HistoryDirection, Timespan};
+
+pub const MIN_SIM_STEPS: u32 = 10;
+pub const RECORD_LENGTH: usize = 250;
 
 pub type Boundary = Arc<RwLock<SimulationBoundary>>;
 
@@ -19,6 +24,19 @@ impl Simulation {
                     world,
                 }
             )
+        }
+    }
+
+    /// Returns a mutable reference to the `SimulationData` or an error if it's not possible.
+    pub fn current_or_err(&mut self) -> Result<&mut SimulationData, SimulationError> {
+        match self.current() {
+            Ok(value) => {
+                match value {
+                    Left(world) => { return Ok(world); },
+                    Right(_) => { return Err(SimulationError::NotFrozen); },
+                }
+            },
+            Err(error) => { return Err(error); }
         }
     }
 
@@ -41,15 +59,14 @@ impl Simulation {
         }
     }
 
-    /// Begins executing the simulation. Returns the Boundary if successful, and sets `self` to the `Executing` variant.
+    /// Begins executing the simulation. Always returns the simulation, and returns the Boundary if successful.
     /// Returns a `SimulationError` if this simulation is already running.
-    pub fn try_execute(mut self) -> Result<Boundary, SimulationError> {
-        // Check this Simulation is frozen
+    pub fn try_execute(mut self) -> (Self, Result<Boundary, SimulationError>) {
         let (schedule, world) =
         if let SimulationState::Frozen(simulation_internal) = self.state {
             (simulation_internal.schedule, simulation_internal.world)
         } else {
-            return Err(SimulationError::AlreadySimulating);
+            return (self, Err(SimulationError::AlreadySimulating));
         };
 
         // Create boundary object
@@ -64,11 +81,49 @@ impl Simulation {
 
             // Logic loop
             loop {
-                if status.read().unwrap().stop_next_tick {
+                let cfg = world.resource::<SimulationConfig>();
+
+                // Check we aren't due to stop
+                if status.read().unwrap().stop_next_tick || (cfg.increments_completed == cfg.increments_for_completion) {
                     return SimulationData { schedule, world };
                 }
 
+                // Time before the tick happens
+                let now = Instant::now();
+
+                // For testing
+                // thread::sleep(std::time::Duration::from_secs_f32(0.1));
+
+                // Run one tick
                 schedule.run(&mut world);
+
+                // Measure how long it took to tick
+                let elapsed = now.elapsed();
+
+                // Increase increment counter by 1
+                let mut cfg = world.resource_mut::<SimulationConfig>();
+                cfg.increments_completed += 1;
+
+                // Write to boundary
+                let mut status = status.write().unwrap();
+                status.steps_total = cfg.increments_for_completion;
+                status.steps_complete = cfg.increments_completed;
+
+                fn push_to_cap<T>(
+                    cap: usize,
+                    value: &mut Vec<T>,
+                    push: T,
+                ) {
+                    let vlen = value.len();
+                    if vlen == cap {
+                        value.remove(0);
+                    }
+                    value.push(push);
+                }
+
+                push_to_cap::<f64>(RECORD_LENGTH, &mut status.tick_time_history, elapsed.as_secs_f64());
+                push_to_cap::<u32>(RECORD_LENGTH, &mut status.entity_count_history, world.query::<Entity>().iter(&world).len() as u32);
+                push_to_cap::<u32>(RECORD_LENGTH, &mut status.people_count_history, world.query_filtered::<Entity, With<Person>>().iter(&world).len() as u32);
             }
         });
 
@@ -79,22 +134,19 @@ impl Simulation {
         };
 
         // Return boundary
-        Ok(status)
+        (self, Ok(status))
     }
 
     /// Signals the simulation to stop and blocks until it finishes.
-    /// Returns a `SimulationError` if the boundary is poisoned or the simulation panicked.
-    pub fn freeze(mut self) -> Result<(), SimulationError> {
-        // Take ownership of self.state
-        let state = self.state;
-
+    /// Returns the frozen simulation if successful, and returns a `SimulationError` if the boundary is poisoned or the simulation panicked.
+    pub fn freeze(mut self) -> Result<Self, SimulationError> {
         // Check state is executing and not frozen
         let (boundary, thread) =
-        if let SimulationState::Executing { boundary, thread } = state {
+        if let SimulationState::Executing { boundary, thread } = self.state {
             (boundary, thread)
         } else {
             // Already frozen
-            return Ok(());
+            return Ok(self);
         };
 
         // Signal simulation to freeze
@@ -108,7 +160,7 @@ impl Simulation {
         if let Ok(data) = thread.join() {
             self.state = SimulationState::Frozen(data);
             // Success!
-            return Ok(());
+            return Ok(self);
         } else {
             return Err(SimulationError::SimulationPanicked);
         };
@@ -118,6 +170,32 @@ impl Simulation {
         match &mut self.state {
             SimulationState::Frozen(ref mut data) => { return Ok(&mut data.world) },
             SimulationState::Executing { boundary: _, thread: _ } => { return Err(SimulationError::NotFrozen) },
+        }
+    }
+}
+
+impl Default for Simulation {
+    fn default() -> Self {
+        let schedule = Schedule::new();
+
+        let mut world = World::new();
+        world.insert_resource(SimulationConfig {
+            locked_in: false,
+            name: "".to_string(),
+            seed: rand::random(),
+            direction: HistoryDirection::Forwards,
+            timespan: Timespan::Months,
+            increments_completed: 0,
+            increments_for_completion: MIN_SIM_STEPS,
+        });
+
+        Self {
+            state: SimulationState::Frozen(
+                SimulationData {
+                    schedule,
+                    world,
+                }
+            )
         }
     }
 }
@@ -154,24 +232,41 @@ pub struct SimulationData {
     pub world: World,
 }
 
+#[derive(Debug)]
 /// Allows communication between the GUI and the simulation thread.
 pub struct SimulationBoundary {
     /// If `true`, the simulation will freeze on the next tick.
     pub stop_next_tick: bool,
 
+    // Completion measurement
     pub steps_complete: u32,
     pub steps_total: u32,
+
+    // Simulation statistics
+    pub tick_time_history: Vec<f64>,
+    pub entity_count_history: Vec<u32>,
+    pub people_count_history: Vec<u32>,
 }
 
 impl Default for SimulationBoundary {
     fn default() -> Self {
         Self {
             stop_next_tick: false,
+
             steps_complete: 0,
             steps_total: 0,
+
+            tick_time_history: Vec::with_capacity(RECORD_LENGTH),
+            entity_count_history: Vec::with_capacity(RECORD_LENGTH),
+            people_count_history: Vec::with_capacity(RECORD_LENGTH),
         }
     }
 }
 
 #[derive(Resource)]
 pub struct SimulationComplete;
+
+/// Checks over everything in the world and ensures it's all working well.
+pub fn validate_world(world: &mut World) {
+
+}
