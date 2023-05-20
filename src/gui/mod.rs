@@ -12,7 +12,7 @@ use crate::world::schedules::bck_day::backwards_days;
 use crate::world::schedules::bck_mon::backwards_months;
 use crate::world::schedules::fwd_day::forwards_days;
 use crate::world::schedules::fwd_mon::forwards_months;
-use crate::world::sim::{Simulation, validate_world};
+use crate::world::sim::{Simulation, validate_world, SimulationData};
 
 use self::view::view_ui;
 use self::edit::edit_ui;
@@ -65,26 +65,7 @@ impl App for WorldGenApp {
 
             match self.simulation.current_or_err() {
                 Ok(simulation) => {
-                    // Get direction and timestep
-                    let mut cfg = simulation.world.resource_mut::<SimulationConfig>();
-                    if cfg.locked_in { return; } // Schedule is already set
-                    let (direction, timestep) = (cfg.direction.clone(), cfg.timespan.clone());
-                    cfg.locked_in = true;
-                    drop(cfg);
-
-                    // Apply systems to schedule object
-                    match (direction, timestep) {
-                        (HistoryDirection::Forwards, Timespan::Months) => forwards_months(&mut simulation.schedule),
-                        (HistoryDirection::Forwards, Timespan::Days) => forwards_days(&mut simulation.schedule),
-                        (HistoryDirection::Backwards, Timespan::Months) => backwards_months(&mut simulation.schedule),
-                        (HistoryDirection::Backwards, Timespan::Days) => backwards_days(&mut simulation.schedule),
-                    }
-
-                    // Initialise schedule
-                    simulation.schedule.initialize(&mut simulation.world).expect("Schedule failed to build");
-
-                    // Validate world to make sure everything is in order
-                    validate_world(&mut simulation.world);
+                    schedule_check(simulation);
                 },
                 Err(_error) => todo!(),
             }
@@ -98,6 +79,32 @@ impl App for WorldGenApp {
             replace_with_or_abort(&mut self.simulation, |sim| sim.freeze().unwrap());
         }
     }
+}
+
+// Makes sure the schedule is set
+fn schedule_check(
+    simulation: &mut SimulationData,
+) {
+    // Get direction and timestep
+    let mut cfg = simulation.world.resource_mut::<SimulationConfig>();
+    if cfg.locked_in { return; } // Schedule is already set
+    let (direction, timestep) = (cfg.direction.clone(), cfg.timespan.clone());
+    cfg.locked_in = true;
+    drop(cfg);
+
+    // Apply systems to schedule object
+    match (direction, timestep) {
+        (HistoryDirection::Forwards, Timespan::Months) => forwards_months(&mut simulation.schedule),
+        (HistoryDirection::Forwards, Timespan::Days) => forwards_days(&mut simulation.schedule),
+        (HistoryDirection::Backwards, Timespan::Months) => backwards_months(&mut simulation.schedule),
+        (HistoryDirection::Backwards, Timespan::Days) => backwards_days(&mut simulation.schedule),
+    }
+
+    // Initialise schedule
+    simulation.schedule.initialize(&mut simulation.world).expect("Schedule failed to build");
+
+    // Validate world to make sure everything is in order
+    validate_world(&mut simulation.world);
 }
 
 #[derive(Hash, PartialEq, Eq, PartialOrd, Ord)]
