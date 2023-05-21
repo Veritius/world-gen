@@ -1,7 +1,6 @@
 //! Places in history.
 
 use bevy_ecs::prelude::*;
-use bevy_hierarchy::Parent;
 use super::thing::Name;
 
 /// A bundle for creating regions.
@@ -17,19 +16,11 @@ pub struct RegionBundle {
 #[derive(Component)]
 pub struct Region;
 
-/// A bundle for creating settlements/towns/cities. If the settlement is part of a region, use `RegionalSettlementBundle`.
+/// A bundle for creating settlements/towns/cities.
 #[derive(Bundle)]
 pub struct SettlementBundle {
     pub name: Name,
     pub settlement: Settlement,
-}
-
-/// A bundle for creating settlements/towns/cities. This one has a `Parent` component for making it part of a `Region`.
-#[derive(Bundle)]
-pub struct RegionalSettlementBundle {
-    pub name: Name,
-    pub settlement: Settlement,
-    pub region: Parent,
 }
 
 /// A discrete settlement, town, or city.
