@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use bevy_ecs::system::CommandQueue;
+use bevy::ecs::system::CommandQueue;
 use eframe::egui;
 use crate::world::sim::SimulationData;
 
