@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use bevy_ecs::{system::{CommandQueue, Spawn, Despawn}, prelude::Entity, world::Mut};
+use bevy::ecs::{system::{CommandQueue, Spawn, Despawn}, prelude::Entity, world::Mut};
 use eframe::egui;
 use crate::{world::{sim::SimulationData, defs::species::{SpeciesBundle, Species}, thing::Name}, gui::EntityStringHashable};
 
@@ -76,13 +76,13 @@ fn species_menu(
 
     ui.separator();
 
-    let mut species_query = sim.world.query::<(Entity, &mut Name, &mut Species)>();
+    let mut species_query = sim.app.world.query::<(Entity, &mut Name, &mut Species)>();
 
     egui::ScrollArea::both()
     .id_source("species_scroll_area")
     .auto_shrink([false, false])
     .show(ui, |ui| {
-        for mut query_data in species_query.iter_mut(&mut sim.world) {
+        for mut query_data in species_query.iter_mut(&mut sim.app.world) {
             species_editor(ui, queue, &mut query_data);
         }
     });

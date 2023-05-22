@@ -1,6 +1,6 @@
 pub mod species;
 
-use bevy_ecs::system::Resource;
+use bevy::ecs::system::Resource;
 
 /// Overarching information about the world.
 #[derive(Resource, Debug)]

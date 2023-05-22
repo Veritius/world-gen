@@ -1,5 +1,5 @@
 use std::{sync::{RwLock, Arc, RwLockReadGuard}, thread::{JoinHandle, self}, time::Instant};
-use bevy_ecs::{world::World, schedule::Schedule, system::Resource, prelude::Entity, query::With};
+use bevy::{ecs::{world::World, system::Resource, prelude::Entity, query::With}, prelude::{App, HierarchyPlugin}};
 use either::Either::{self, Left, Right};
 use crate::world::{defs::SimulationConfig, person::Person};
 use super::defs::{HistoryDirection, Timespan};
@@ -15,15 +15,10 @@ pub struct Simulation {
 }
 
 impl Simulation {
-    /// Creates a new frozen simulation from a `World` and `Schedule`.
-    pub fn new(world: World, schedule: Schedule) -> Self {
+    /// Creates a new frozen simulation from a Bevy `App`
+    pub fn new(app: App) -> Self {
         Self {
-            state: SimulationState::Frozen(
-                SimulationData {
-                    schedule,
-                    world,
-                }
-            )
+            state: SimulationState::Frozen(SimulationData { app })
         }
     }
 
@@ -62,9 +57,9 @@ impl Simulation {
     /// Begins executing the simulation. Always returns the simulation, and returns the Boundary if successful.
     /// Returns a `SimulationError` if this simulation is already running.
     pub fn try_execute(mut self) -> (Self, Result<Boundary, SimulationError>) {
-        let (schedule, world) =
+        let app =
         if let SimulationState::Frozen(simulation_internal) = self.state {
-            (simulation_internal.schedule, simulation_internal.world)
+            simulation_internal.app
         } else {
             return (self, Err(SimulationError::AlreadySimulating));
         };
@@ -77,15 +72,15 @@ impl Simulation {
         let thread: JoinHandle<SimulationData> = thread::spawn(move || {
             // Take ownership
             let status = status_for_thread;
-            let (mut schedule, mut world) = (schedule, world);
+            let mut app = app;
 
             // Logic loop
             loop {
-                let cfg = world.resource::<SimulationConfig>();
+                let cfg = app.world.resource::<SimulationConfig>();
 
                 // Check we aren't due to stop
                 if status.read().unwrap().stop_next_tick || (cfg.increments_completed == cfg.increments_for_completion) {
-                    return SimulationData { schedule, world };
+                    return SimulationData { app };
                 }
 
                 // Time before the tick happens
@@ -95,13 +90,13 @@ impl Simulation {
                 // thread::sleep(std::time::Duration::from_secs_f32(0.1));
 
                 // Run one tick
-                schedule.run(&mut world);
+                app.update();
 
                 // Measure how long it took to tick
                 let elapsed = now.elapsed();
 
                 // Increase increment counter by 1
-                let mut cfg = world.resource_mut::<SimulationConfig>();
+                let mut cfg = app.world.resource_mut::<SimulationConfig>();
                 cfg.increments_completed += 1;
 
                 // Write to boundary
@@ -122,8 +117,8 @@ impl Simulation {
                 }
 
                 push_to_cap::<f64>(RECORD_LENGTH, &mut status.tick_time_history, elapsed.as_secs_f64());
-                push_to_cap::<u32>(RECORD_LENGTH, &mut status.entity_count_history, world.query::<Entity>().iter(&world).len() as u32);
-                push_to_cap::<u32>(RECORD_LENGTH, &mut status.people_count_history, world.query_filtered::<Entity, With<Person>>().iter(&world).len() as u32);
+                push_to_cap::<u32>(RECORD_LENGTH, &mut status.entity_count_history, app.world.query::<Entity>().iter(&app.world).len() as u32);
+                push_to_cap::<u32>(RECORD_LENGTH, &mut status.people_count_history, app.world.query_filtered::<Entity, With<Person>>().iter(&app.world).len() as u32);
             }
         });
 
@@ -168,7 +163,7 @@ impl Simulation {
 
     pub fn world(&mut self) -> Result<&mut World, SimulationError> {
         match &mut self.state {
-            SimulationState::Frozen(ref mut data) => { return Ok(&mut data.world) },
+            SimulationState::Frozen(ref mut data) => { return Ok(&mut data.app.world) },
             SimulationState::Executing { boundary: _, thread: _ } => { return Err(SimulationError::NotFrozen) },
         }
     }
@@ -176,10 +171,11 @@ impl Simulation {
 
 impl Default for Simulation {
     fn default() -> Self {
-        let schedule = Schedule::new();
+        let mut app = App::new();
 
-        let mut world = World::new();
-        world.insert_resource(SimulationConfig {
+        app.add_plugin(HierarchyPlugin);
+
+        app.insert_resource(SimulationConfig {
             locked_in: false,
             name: "".to_string(),
             seed: rand::random(),
@@ -190,12 +186,7 @@ impl Default for Simulation {
         });
 
         Self {
-            state: SimulationState::Frozen(
-                SimulationData {
-                    schedule,
-                    world,
-                }
-            )
+            state: SimulationState::Frozen(SimulationData { app })
         }
     }
 }
@@ -227,9 +218,8 @@ pub enum SimulationError {
     NotFrozen,
 }
 
-pub struct SimulationData {
-    pub schedule: Schedule,
-    pub world: World,
+pub struct SimulationData{
+    pub app: App
 }
 
 #[derive(Debug)]

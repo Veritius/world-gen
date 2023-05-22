@@ -1,6 +1,6 @@
 //! A person in history.
 
-use bevy_ecs::prelude::*;
+use bevy::ecs::prelude::*;
 use super::thing::{Name, Age};
 
 #[derive(Bundle)]
