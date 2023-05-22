@@ -1,5 +1,5 @@
 use std::{collections::{BTreeMap, BTreeSet}, marker::PhantomData};
-use bevy_ecs::{system::{CommandQueue, Spawn, Insert, Remove, Despawn}, query::With, prelude::Entity};
+use bevy::ecs::{system::{CommandQueue, Spawn, Insert, Remove, Despawn}, query::With, prelude::Entity};
 use eframe::egui;
 use crate::{world::{sim::SimulationData, person::{PersonBundle, Person, Personality}, thing::{Name, Age, Important}, defs::species::{Species, AssociatedSpecies}}, gui::EntityStringHashable};
 
@@ -41,17 +41,17 @@ fn character_editor(
     queue: &mut CommandQueue,
     sim: &mut SimulationData,
 ) {
-    let mut people_query = sim.world.query_filtered::<(Entity, &mut Name, Option<&Important>, &mut Age, &mut Personality, Option<&mut AssociatedSpecies>), With<Person>>();
+    let mut people_query = sim.app.world.query_filtered::<(Entity, &mut Name, Option<&Important>, &mut Age, &mut Personality, Option<&mut AssociatedSpecies>), With<Person>>();
     let mut people_set: BTreeSet<Entity> = BTreeSet::new();
 
-    for x in people_query.iter(&mut sim.world) {
+    for x in people_query.iter(&mut sim.app.world) {
         people_set.insert(x.0);
     }
 
-    let mut species_query = sim.world.query::<(Entity, &Name, &Species)>();
+    let mut species_query = sim.app.world.query::<(Entity, &Name, &Species)>();
     let mut species_map: BTreeMap<Entity, (Name, Species)> = BTreeMap::new();
 
-    for (entity, name, species) in species_query.iter(&sim.world) {
+    for (entity, name, species) in species_query.iter(&sim.app.world) {
         // Non-humanoids are irrelevant here
         if !species.humanoid { continue; }
 
@@ -66,7 +66,7 @@ fn character_editor(
     .auto_shrink([false, false])
     .show(ui, |ui| {
         for entity in people_set.iter() {
-            let (entity, mut name, important, mut age, mut personality, species) = people_query.get_mut(&mut sim.world, *entity).unwrap();
+            let (entity, mut name, important, mut age, mut personality, species) = people_query.get_mut(&mut sim.app.world, *entity).unwrap();
 
             // Filter options by name
             if search_term.is_some() {

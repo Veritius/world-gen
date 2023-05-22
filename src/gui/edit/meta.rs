@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use bevy_ecs::{system::CommandQueue, world::Mut};
+use bevy::ecs::{system::CommandQueue, world::Mut};
 use eframe::egui;
 use crate::world::{sim::SimulationData, defs::{SimulationConfig, HistoryDirection, Timespan}};
 
@@ -9,7 +9,7 @@ pub(super) fn edit_meta_ui(
     _queue: &mut CommandQueue,
     sim: &mut SimulationData,
 ) {
-    let mut config = sim.world.resource_mut::<SimulationConfig>();
+    let mut config = sim.app.world.resource_mut::<SimulationConfig>();
 
     ui.add_enabled_ui(!config.locked_in, |ui| world_settings(ui, &mut config));
 

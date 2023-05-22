@@ -2,16 +2,16 @@ mod edit;
 mod view;
 
 use std::collections::BTreeMap;
-use bevy_ecs::system::CommandQueue;
-use bevy_ecs::prelude::Entity;
+use bevy::ecs::system::CommandQueue;
+use bevy::ecs::prelude::Entity;
 use eframe::{egui, Frame, App};
 use either::Either::{Right, Left};
 use replace_with::replace_with_or_abort;
 use crate::world::defs::{SimulationConfig, Timespan, HistoryDirection};
-use crate::world::schedules::bck_day::backwards_days;
-use crate::world::schedules::bck_mon::backwards_months;
-use crate::world::schedules::fwd_day::forwards_days;
-use crate::world::schedules::fwd_mon::forwards_months;
+use crate::world::presets::bck_day::add_backward_day_presets;
+use crate::world::presets::bck_mon::add_backward_month_presets;
+use crate::world::presets::fwd_day::add_forward_day_presets;
+use crate::world::presets::fwd_mon::add_forward_month_presets;
 use crate::world::sim::{Simulation, validate_world, SimulationData};
 
 use self::view::view_ui;
@@ -42,7 +42,7 @@ impl App for WorldGenApp {
                         Left(data) => {
                             let mut queue = CommandQueue::default();
                             edit_ui(ui, &mut self.state, &mut queue, data);
-                            queue.apply(&mut data.world);
+                            queue.apply(&mut data.app.world);
                         },
                         // The simulation is running and the boundary can be read
                         Right(boundary) => {
@@ -65,7 +65,7 @@ impl App for WorldGenApp {
 
             match self.simulation.current_or_err() {
                 Ok(simulation) => {
-                    schedule_check(simulation);
+                    systems_check(simulation);
                 },
                 Err(_error) => todo!(),
             }
@@ -81,30 +81,27 @@ impl App for WorldGenApp {
     }
 }
 
-// Makes sure the schedule is set
-fn schedule_check(
+// Adds the necessary systems for simulation
+fn systems_check(
     simulation: &mut SimulationData,
 ) {
     // Get direction and timestep
-    let mut cfg = simulation.world.resource_mut::<SimulationConfig>();
-    if cfg.locked_in { return; } // Schedule is already set
+    let mut cfg = simulation.app.world.resource_mut::<SimulationConfig>();
+    if cfg.locked_in { return; } // Preset is already set
     let (direction, timestep) = (cfg.direction.clone(), cfg.timespan.clone());
     cfg.locked_in = true;
     drop(cfg);
 
-    // Apply systems to schedule object
+    // Apply systems to app
     match (direction, timestep) {
-        (HistoryDirection::Forwards, Timespan::Months) => forwards_months(&mut simulation.schedule),
-        (HistoryDirection::Forwards, Timespan::Days) => forwards_days(&mut simulation.schedule),
-        (HistoryDirection::Backwards, Timespan::Months) => backwards_months(&mut simulation.schedule),
-        (HistoryDirection::Backwards, Timespan::Days) => backwards_days(&mut simulation.schedule),
+        (HistoryDirection::Forwards, Timespan::Months) => add_forward_month_presets(&mut simulation.app),
+        (HistoryDirection::Forwards, Timespan::Days) => add_forward_day_presets(&mut simulation.app),
+        (HistoryDirection::Backwards, Timespan::Months) => add_backward_month_presets(&mut simulation.app),
+        (HistoryDirection::Backwards, Timespan::Days) => add_backward_day_presets(&mut simulation.app),
     }
 
-    // Initialise schedule
-    simulation.schedule.initialize(&mut simulation.world).expect("Schedule failed to build");
-
     // Validate world to make sure everything is in order
-    validate_world(&mut simulation.world);
+    validate_world(&mut simulation.app.world);
 }
 
 #[derive(Hash, PartialEq, Eq, PartialOrd, Ord)]

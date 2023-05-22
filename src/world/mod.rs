@@ -1,5 +1,5 @@
 pub mod sim;
-pub mod schedules;
+pub mod presets;
 
 pub mod event;
 pub mod person;
@@ -12,7 +12,7 @@ pub mod soft_limits {
     pub const MAX_YEARS_TO_SIMULATE: u32 = 1000;
 }
 
-use bevy_ecs::prelude::Component;
+use bevy::prelude::Component;
 
 /// The age of this entity.
 #[derive(Component)]

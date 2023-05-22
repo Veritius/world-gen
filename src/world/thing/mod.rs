@@ -1,7 +1,7 @@
 //! An object in history.
 //! Also non-specific data like the name or age of something.
 
-use bevy_ecs::prelude::*;
+use bevy::ecs::prelude::*;
 
 /// Any entities with this component will have more in-depth information generated.
 #[derive(Component, Clone)]
