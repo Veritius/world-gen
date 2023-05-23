@@ -29,3 +29,11 @@ pub struct SettlementBundle {
 pub struct Settlement {
     pub population: u32,
 }
+
+impl Default for Settlement {
+    fn default() -> Self {
+        Self {
+            population: 0
+        }
+    }
+}

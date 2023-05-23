@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
-use bevy::{ecs::system::CommandQueue, prelude::{Or, Entity, With, Parent, Children, QueryState, Without, World}};
-use eframe::egui;
+use bevy::{ecs::system::{CommandQueue, Spawn}, prelude::{Or, Entity, With, Parent, Children, QueryState, Without, World}};
+use eframe::{egui, epaint::Color32};
 use either::Either;
-use crate::{world::{sim::SimulationData, place::{Settlement, Region}, thing::Name}, gui::EntityStringHashable};
+use crate::{world::{sim::SimulationData, place::{Settlement, Region, RegionBundle, SettlementBundle}, thing::Name}, gui::EntityStringHashable};
 
 pub(super) fn edit_places_ui(
     ui: &mut egui::Ui,
@@ -10,6 +10,24 @@ pub(super) fn edit_places_ui(
     queue: &mut CommandQueue,
     sim: &mut SimulationData,
 ) {
+    ui.horizontal(|ui| {
+        if ui.button("New region").clicked() {
+            queue.push(Spawn { bundle: RegionBundle {
+                name: Name("A new region".to_string()),
+                area: Region,
+            }});
+        }
+        
+        if ui.button("New settlement").clicked() {
+            queue.push(Spawn { bundle: SettlementBundle {
+                name: Name("A new settlement".to_string()),
+                settlement: Settlement::default(),
+            }});
+        }
+    });
+
+    ui.separator();
+
     let world = &mut sim.app.world;
 
     let mut all_nodes = world.query_filtered::<(Entity, Option<&Parent>, Option<&Children>), Or<(With<Region>, With<Settlement>)>>();
@@ -56,9 +74,6 @@ fn recursively_create_ui(
     regions: &mut QueryState<(Entity, &mut Name, &mut Region), Without<Settlement>>,
     settlements: &mut QueryState<(Entity, &mut Name, &mut Settlement), Without<Region>>,
 ) {
-    if !subnodes.contains_key(&element) { return; }
-    let children = &subnodes[&element];
-
     let mut header_title: String;
     let mut ui_fn: Box<dyn FnOnce(&mut egui::Ui)>;
 
@@ -67,29 +82,34 @@ fn recursively_create_ui(
             header_title = name.0.clone();
             ui_fn = Box::new(region_ui);
         },
-        Err(_) => {},
-    }
-
-    match settlements.get_mut(world, element) {
-        Ok((entity, mut name, mut settlement)) => {
-            header_title = name.0.clone();
-            ui_fn = Box::new(settlement_ui);
-        },
         Err(_) => {
-            header_title = "Something went very wrong".to_string();
-            ui_fn = Box::new(|ui|{});
+            match settlements.get_mut(world, element) {
+                Ok((entity, mut name, mut settlement)) => {
+                    header_title = name.0.clone();
+                    ui_fn = Box::new(settlement_ui);
+                },
+                Err(_) => {
+                    header_title = "Error! Open me!".to_string();
+                    ui_fn = Box::new(|ui|{ ui.label(egui::RichText::new("Something went wrong when querying the settlement entity.\nThis is a bug, and you should report it.").color(Color32::RED)); });
+                },
+            }
         },
     }
 
     egui::CollapsingHeader::new(format!("{} {:?}", header_title, element))
     .id_source(EntityStringHashable(element, "place_config".to_string()))
-    .show(ui, ui_fn);
-
-    egui::CollapsingHeader::new("Children")
-    .id_source(EntityStringHashable(element, "children_elements".to_string()))
     .show(ui, |ui| {
-        for child in children {
-            recursively_create_ui(*child, &subnodes, ui, world, regions, settlements);
+        ui_fn(ui);
+
+        if subnodes.contains_key(&element) {
+            egui::CollapsingHeader::new("Children")
+            .id_source(EntityStringHashable(element, "children_elements".to_string()))
+            .show(ui, |ui| {
+                let children = &subnodes[&element];
+                for child in children {
+                    recursively_create_ui(*child, &subnodes, ui, world, regions, settlements);
+                }
+            });
         }
     });
 }
