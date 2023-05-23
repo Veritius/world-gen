@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use bevy::{ecs::system::{CommandQueue, Spawn}, prelude::{Or, Entity, With, Parent, Children, QueryState, Without, World, DespawnRecursive}};
+use bevy::{ecs::system::{CommandQueue, Spawn}, prelude::{Or, Entity, With, Parent, Children, QueryState, Without, World, DespawnRecursive, RemoveParent, AddChild}};
 use eframe::{egui, epaint::Color32};
 use crate::{world::{sim::SimulationData, place::{Settlement, Region, RegionBundle, SettlementBundle}, thing::Name}, gui::{EntityStringHashable, ecs::SpawnChild}};
 
@@ -70,12 +70,19 @@ pub(super) fn edit_places_ui(
     let mut regions = world.query_filtered::<(Entity, &mut Name, &mut Region), Without<Settlement>>();
     let mut settlements = world.query_filtered::<(Entity, &mut Name, &mut Settlement), Without<Region>>();
 
+    // List of all regions and their names
+    let mut all_regions: Vec<(Entity, String)> = Vec::with_capacity(regions.iter(world).len());
+    for (entity, name, _) in regions.iter(world) {
+        all_regions.push((entity, name.0.clone()));
+    }
+    all_regions.sort_by(|a, b| { a.0.cmp(&b.0) });
+
     egui::ScrollArea::both()
     .id_source("places_scroll_area")
     .auto_shrink([false, false])
     .show(ui, |ui| {
         for root in &roots {
-            recursively_create_ui(*root, &subnodes, queue, ui, world, &mut regions, &mut settlements);
+            recursively_create_ui(*root, &subnodes, queue, ui, world, &all_regions, &mut regions, &mut settlements);
         }
     });
 }
@@ -86,6 +93,7 @@ fn recursively_create_ui(
     queue: &mut CommandQueue,
     ui: &mut egui::Ui,
     world: &mut World,
+    region_list: &Vec<(Entity, String)>,
     regions: &mut QueryState<(Entity, &mut Name, &mut Region), Without<Settlement>>,
     settlements: &mut QueryState<(Entity, &mut Name, &mut Settlement), Without<Region>>,
 ) {
@@ -107,17 +115,17 @@ fn recursively_create_ui(
         },
     }
 
-    egui::CollapsingHeader::new(format!("{} {:?}", header_title, element))
+    egui::CollapsingHeader::new(format!("{} ({:?})", header_title, element))
     .id_source(EntityStringHashable(element, "place_config".to_string()))
     .show(ui, |ui| {
         match regions.get_mut(world, element) {
             Ok((entity, mut name, mut region)) => {
-                region_ui(queue, ui, entity, &mut *name, &mut *region);
+                region_ui(queue, ui, region_list, entity, &mut *name, &mut *region);
             },
             Err(_) => {
                 match settlements.get_mut(world, element) {
                     Ok((entity, mut name, mut settlement)) => {
-                        settlement_ui(queue, ui, entity, &mut *name, &mut *settlement);
+                        settlement_ui(queue, ui, region_list, entity, &mut *name, &mut *settlement);
                     },
                     Err(_) => {
                         ui.label(egui::RichText::new("Something went wrong when querying the settlement entity.\nThis is a bug, and you should report it.").color(Color32::RED));
@@ -131,7 +139,7 @@ fn recursively_create_ui(
             ui.label("Sub-regions and settlements");
             let children = &subnodes[&element];
             for child in children {
-                recursively_create_ui(*child, &subnodes, queue, ui, world, regions, settlements);
+                recursively_create_ui(*child, &subnodes, queue, ui, world, region_list, regions, settlements);
             }
         }
     });
@@ -140,11 +148,14 @@ fn recursively_create_ui(
 fn region_ui(
     queue: &mut CommandQueue,
     ui: &mut egui::Ui,
+    region_list: &Vec<(Entity, String)>,
     entity: Entity,
     name: &mut Name,
     region: &mut Region,
 ) {
     ui.horizontal(|ui| {
+        change_owner_ui(ui, queue, region_list, entity);
+
         if ui.button("New child region").clicked() {
             queue.push(SpawnChild { bundle: RegionBundle::default(), parent: entity });
         }
@@ -171,13 +182,18 @@ fn region_ui(
 fn settlement_ui(
     queue: &mut CommandQueue,
     ui: &mut egui::Ui,
+    region_list: &Vec<(Entity, String)>,
     entity: Entity,
     name: &mut Name,
     settlement: &mut Settlement,
 ) {
-    if ui.button("Delete this object").clicked() {
-        queue.push(DespawnRecursive { entity });
-    }
+    ui.horizontal(|ui| {
+        change_owner_ui(ui, queue, region_list, entity);
+
+        if ui.button("Delete this object").clicked() {
+            queue.push(DespawnRecursive { entity });
+        }
+    });
 
     ui.add_space(6.0);
 
@@ -190,5 +206,29 @@ fn settlement_ui(
         ui.label("Population");
         ui.add(egui::DragValue::new(&mut settlement.population));
         ui.end_row();
+    });
+}
+
+fn change_owner_ui(
+    ui: &mut egui::Ui,
+    queue: &mut CommandQueue,
+    region_list: &Vec<(Entity, String)>,
+    entity: Entity,
+) {
+    egui::ComboBox::from_id_source(EntityStringHashable(entity, "region_change_owner".to_string()))
+    .selected_text("Change parent")
+    .width(150.0)
+    .show_ui(ui, |ui| {
+        if ui.button("Remove owner").clicked() {
+            queue.push(RemoveParent { child: entity });
+        };
+
+        // List all regions
+        for (region_ent, region_name) in region_list {
+            if *region_ent == entity { continue; } // don't set ourselves as the parent
+            if ui.button(format!("{} ({:?})", region_name, region_ent)).clicked() {
+                queue.push(AddChild { parent: *region_ent, child: entity });
+            }
+        }
     });
 }
