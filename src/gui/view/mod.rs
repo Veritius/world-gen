@@ -1,6 +1,6 @@
 use std::{sync::RwLockReadGuard, collections::BTreeMap};
-use eframe::egui::{self, plot::{PlotPoints, Line, Plot, PlotUi}};
-use crate::world::sim::SimulationBoundary;
+use eframe::egui::{self, plot::{PlotPoints, Line, Plot, PlotUi, Legend, Corner}};
+use crate::world::sim::{SimulationBoundary, RECORD_LENGTH};
 
 pub(super) fn view_ui(
     ui: &mut egui::Ui,
@@ -29,6 +29,13 @@ fn stat_plots(
     ui.label("Time taken per simulation step (in seconds)");
     Plot::new("tick_time_plot")
     .height(100.0)
+    .allow_drag(false)
+    .allow_scroll(false)
+    .allow_boxed_zoom(false)
+    .include_x(0.0)
+    .include_x(RECORD_LENGTH as f64)
+    .include_y(0.0)
+    .show_x(false)
     .show(ui, |plot_ui| {
         let points: PlotPoints = sim.tick_time_history.iter().enumerate().map(|(i, val)| { [i as f64, *val] }).collect();
         let line = Line::new(points);
@@ -39,42 +46,28 @@ fn stat_plots(
 
     // Entity count
     ui.label("Entity count");
-    ui.horizontal(|ui| {
-        // Stats that will be shown in the graph
-        let stats = [
-            ("Entities", &sim.entity_count_history),
-            ("People", &sim.people_count_history),
-        ];
+    
+    // Stats that will be shown in the graph
+    let stats = [
+        ("Total", &sim.entity_count_history),
+        ("People", &sim.people_count_history),
+        ("Places", &sim.place_count_history),
+    ];
 
-        // Plot
-        Plot::new("entity_count_plot")
-        .width(ui.available_width() - 160.0)
-        .allow_drag(false)
-        .allow_scroll(false)
-        .allow_boxed_zoom(false)
-        .show_x(false)
-        .show_y(false)
-        .show(ui, |plot_ui| {
-            for (_, stat) in stats {
-                display_u32s_on_plot(plot_ui, stat);
-            }
-        });
-        
-        // Number stats
-        ui.vertical(|ui| {
-            for (name, stat) in stats {
-                ui.label(format!("{}: {}", name, stat.iter().last().unwrap_or(&0u32)));
-            }
-        });
+    // Plot
+    Plot::new("entity_count_plot")
+    .allow_drag(false)
+    .allow_scroll(false)
+    .allow_boxed_zoom(false)
+    .include_x(0.0)
+    .include_x(RECORD_LENGTH as f64)
+    .show_x(false)
+    .legend(Legend::default().position(Corner::LeftTop))
+    .show(ui, |plot_ui| {
+        for (name, stat) in stats {
+            let points: PlotPoints = stat.iter().enumerate().map(|(i, val)| [i as f64, *val]).collect();
+            let line = Line::new(points).name(name);
+            plot_ui.line(line);
+        }
     });
-}
-
-/// Takes a vec of u32s and puts them on the plot widget
-fn display_u32s_on_plot(
-    ui: &mut PlotUi,
-    set: &Vec<u32>,
-) {
-    let points: PlotPoints = set.iter().enumerate().map(|(i, val)| [i as f64, *val as f64]).collect();
-    let line = Line::new(points);
-    ui.line(line);
 }

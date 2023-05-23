@@ -1,7 +1,7 @@
 use std::{sync::{RwLock, Arc, RwLockReadGuard}, thread::{JoinHandle, self}, time::Instant};
-use bevy::{ecs::{world::World, system::Resource, prelude::Entity, query::With}, prelude::{App, HierarchyPlugin}};
+use bevy::{ecs::{world::World, system::Resource, prelude::Entity, query::With}, prelude::{App, HierarchyPlugin, Or}};
 use either::Either::{self, Left, Right};
-use crate::world::{defs::SimulationConfig, person::Person};
+use crate::world::{defs::SimulationConfig, person::Person, place::{Region, Settlement}};
 use super::defs::{HistoryDirection, Timespan};
 
 pub const MIN_SIM_STEPS: u32 = 10;
@@ -117,8 +117,9 @@ impl Simulation {
                 }
 
                 push_to_cap::<f64>(RECORD_LENGTH, &mut status.tick_time_history, elapsed.as_secs_f64());
-                push_to_cap::<u32>(RECORD_LENGTH, &mut status.entity_count_history, app.world.query::<Entity>().iter(&app.world).len() as u32);
-                push_to_cap::<u32>(RECORD_LENGTH, &mut status.people_count_history, app.world.query_filtered::<Entity, With<Person>>().iter(&app.world).len() as u32);
+                push_to_cap::<f64>(RECORD_LENGTH, &mut status.entity_count_history, app.world.query::<Entity>().iter(&app.world).len() as f64);
+                push_to_cap::<f64>(RECORD_LENGTH, &mut status.people_count_history, app.world.query_filtered::<Entity, With<Person>>().iter(&app.world).len() as f64);
+                push_to_cap::<f64>(RECORD_LENGTH, &mut status.place_count_history, app.world.query_filtered::<Entity, Or<(With<Region>, With<Settlement>)>>().iter(&app.world).len() as f64)
             }
         });
 
@@ -234,8 +235,9 @@ pub struct SimulationBoundary {
 
     // Simulation statistics
     pub tick_time_history: Vec<f64>,
-    pub entity_count_history: Vec<u32>,
-    pub people_count_history: Vec<u32>,
+    pub entity_count_history: Vec<f64>,
+    pub people_count_history: Vec<f64>,
+    pub place_count_history: Vec<f64>,
 }
 
 impl Default for SimulationBoundary {
@@ -249,6 +251,7 @@ impl Default for SimulationBoundary {
             tick_time_history: Vec::with_capacity(RECORD_LENGTH),
             entity_count_history: Vec::with_capacity(RECORD_LENGTH),
             people_count_history: Vec::with_capacity(RECORD_LENGTH),
+            place_count_history: Vec::with_capacity(RECORD_LENGTH),
         }
     }
 }
