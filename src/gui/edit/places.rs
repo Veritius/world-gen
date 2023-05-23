@@ -3,6 +3,8 @@ use bevy::{ecs::system::{CommandQueue, Spawn}, prelude::{Or, Entity, With, Paren
 use eframe::{egui, epaint::Color32};
 use crate::{world::{sim::SimulationData, place::{Settlement, Region, RegionBundle, SettlementBundle}, thing::Name}, gui::{EntityStringHashable, ecs::SpawnChild}};
 
+use super::helpers::change_owner_button;
+
 const SEARCH_KEY: &str = "edit_places_search";
 
 pub(super) fn edit_places_ui(
@@ -154,7 +156,7 @@ fn region_ui(
     region: &mut Region,
 ) {
     ui.horizontal(|ui| {
-        change_owner_ui(ui, queue, region_list, entity);
+        change_owner_button(ui, queue, region_list, entity);
 
         if ui.button("New child region").clicked() {
             queue.push(SpawnChild { bundle: RegionBundle::default(), parent: entity });
@@ -188,7 +190,7 @@ fn settlement_ui(
     settlement: &mut Settlement,
 ) {
     ui.horizontal(|ui| {
-        change_owner_ui(ui, queue, region_list, entity);
+        change_owner_button(ui, queue, region_list, entity);
 
         if ui.button("Delete this object").clicked() {
             queue.push(DespawnRecursive { entity });
@@ -206,29 +208,5 @@ fn settlement_ui(
         ui.label("Population");
         ui.add(egui::DragValue::new(&mut settlement.population));
         ui.end_row();
-    });
-}
-
-fn change_owner_ui(
-    ui: &mut egui::Ui,
-    queue: &mut CommandQueue,
-    region_list: &Vec<(Entity, String)>,
-    entity: Entity,
-) {
-    egui::ComboBox::from_id_source(EntityStringHashable(entity, "region_change_owner".to_string()))
-    .selected_text("Change parent")
-    .width(150.0)
-    .show_ui(ui, |ui| {
-        if ui.button("Remove owner").clicked() {
-            queue.push(RemoveParent { child: entity });
-        };
-
-        // List all regions
-        for (region_ent, region_name) in region_list {
-            if *region_ent == entity { continue; } // don't set ourselves as the parent
-            if ui.button(format!("{} ({:?})", region_name, region_ent)).clicked() {
-                queue.push(AddChild { parent: *region_ent, child: entity });
-            }
-        }
     });
 }

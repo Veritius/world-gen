@@ -2,6 +2,7 @@ mod meta;
 mod people;
 mod definitions;
 mod places;
+mod helpers;
 
 use std::collections::BTreeMap;
 use bevy::ecs::system::CommandQueue;
