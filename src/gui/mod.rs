@@ -47,10 +47,10 @@ impl App for WorldGenApp {
                         },
                         // The simulation is running and the boundary can be read
                         Right(boundary) => {
-                            view_ui(ui, &mut self.state, boundary);
+                            // Always repaint the UI while the simulation is in progress
+                            if boundary.steps_complete != boundary.steps_total { ctx.request_repaint(); }
 
-                            // Always repaint the UI in the view state, as there are widgets that change without user input
-                            ctx.request_repaint();
+                            view_ui(ui, &mut self.state, boundary);
                         },
                     }
                 },
