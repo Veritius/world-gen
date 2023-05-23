@@ -35,7 +35,16 @@ fn stat_plots(
     .include_x(0.0)
     .include_x(RECORD_LENGTH as f64)
     .include_y(0.0)
+    .include_y(0.005)
     .show_x(false)
+    .label_formatter(|name, value| {
+        if value.y < 1.0 {
+            format!("{}\n{:.3} milliseconds", name, (value.y * 1000.0))
+        } else {
+            format!("{}\n{:.4} seconds", name, value.y)
+        }
+    })
+    .x_axis_formatter(|_, _| format!(""))
     .show(ui, |plot_ui| {
         let points: PlotPoints = sim.tick_time_history.iter().enumerate().map(|(i, val)| { [i as f64, *val] }).collect();
         let line = Line::new(points);
@@ -56,6 +65,7 @@ fn stat_plots(
 
     // Plot
     Plot::new("entity_count_plot")
+    .height(150.0)
     .allow_drag(false)
     .allow_scroll(false)
     .allow_boxed_zoom(false)
@@ -63,6 +73,9 @@ fn stat_plots(
     .include_x(RECORD_LENGTH as f64)
     .show_x(false)
     .legend(Legend::default().position(Corner::LeftTop))
+    .label_formatter(|name, value| format!("{}\n{}", name, value.y.floor()))
+    .y_axis_formatter(|_, _| format!(""))
+    .x_axis_formatter(|_, _| format!(""))
     .show(ui, |plot_ui| {
         for (name, stat) in stats {
             let points: PlotPoints = stat.iter().enumerate().map(|(i, val)| [i as f64, *val]).collect();
