@@ -1,8 +1,7 @@
 use std::collections::BTreeMap;
-use bevy::{ecs::system::{CommandQueue, Spawn}, prelude::{Or, Entity, With, Parent, Children, QueryState, Without, World}};
+use bevy::{ecs::system::{CommandQueue, Spawn}, prelude::{Or, Entity, With, Parent, Children, QueryState, Without, World, DespawnRecursive}};
 use eframe::{egui, epaint::Color32};
-use either::Either;
-use crate::{world::{sim::SimulationData, place::{Settlement, Region, RegionBundle, SettlementBundle}, thing::Name}, gui::EntityStringHashable};
+use crate::{world::{sim::SimulationData, place::{Settlement, Region, RegionBundle, SettlementBundle}, thing::Name}, gui::{EntityStringHashable, ecs::SpawnChild}};
 
 pub(super) fn edit_places_ui(
     ui: &mut egui::Ui,
@@ -12,17 +11,11 @@ pub(super) fn edit_places_ui(
 ) {
     ui.horizontal(|ui| {
         if ui.button("New region").clicked() {
-            queue.push(Spawn { bundle: RegionBundle {
-                name: Name("A new region".to_string()),
-                area: Region,
-            }});
+            queue.push(Spawn { bundle: RegionBundle::default() });
         }
         
         if ui.button("New settlement").clicked() {
-            queue.push(Spawn { bundle: SettlementBundle {
-                name: Name("A new settlement".to_string()),
-                settlement: Settlement::default(),
-            }});
+            queue.push(Spawn { bundle: SettlementBundle::default() });
         }
     });
 
@@ -61,7 +54,7 @@ pub(super) fn edit_places_ui(
     .auto_shrink([false, false])
     .show(ui, |ui| {
         for root in &roots {
-            recursively_create_ui(*root, &subnodes, ui, world, &mut regions, &mut settlements);
+            recursively_create_ui(*root, &subnodes, queue, ui, world, &mut regions, &mut settlements);
         }
     });
 }
@@ -69,28 +62,25 @@ pub(super) fn edit_places_ui(
 fn recursively_create_ui(
     element: Entity,
     subnodes: &BTreeMap<Entity, Vec<Entity>>,
+    queue: &mut CommandQueue,
     ui: &mut egui::Ui,
     world: &mut World,
     regions: &mut QueryState<(Entity, &mut Name, &mut Region), Without<Settlement>>,
     settlements: &mut QueryState<(Entity, &mut Name, &mut Settlement), Without<Region>>,
 ) {
-    let mut header_title: String;
-    let mut ui_fn: Box<dyn FnOnce(&mut egui::Ui)>;
+    let header_title: String;
 
-    match regions.get_mut(world, element) {
-        Ok((entity, mut name, mut region)) => {
+    match regions.get(world, element) {
+        Ok((_, name, _)) => {
             header_title = name.0.clone();
-            ui_fn = Box::new(region_ui);
         },
         Err(_) => {
-            match settlements.get_mut(world, element) {
-                Ok((entity, mut name, mut settlement)) => {
+            match settlements.get(world, element) {
+                Ok((_, name, _)) => {
                     header_title = name.0.clone();
-                    ui_fn = Box::new(settlement_ui);
                 },
                 Err(_) => {
                     header_title = "Error! Open me!".to_string();
-                    ui_fn = Box::new(|ui|{ ui.label(egui::RichText::new("Something went wrong when querying the settlement entity.\nThis is a bug, and you should report it.").color(Color32::RED)); });
                 },
             }
         },
@@ -99,29 +89,85 @@ fn recursively_create_ui(
     egui::CollapsingHeader::new(format!("{} {:?}", header_title, element))
     .id_source(EntityStringHashable(element, "place_config".to_string()))
     .show(ui, |ui| {
-        ui_fn(ui);
+        match regions.get_mut(world, element) {
+            Ok((entity, mut name, mut region)) => {
+                region_ui(queue, ui, entity, &mut *name, &mut *region);
+            },
+            Err(_) => {
+                match settlements.get_mut(world, element) {
+                    Ok((entity, mut name, mut settlement)) => {
+                        settlement_ui(queue, ui, entity, &mut *name, &mut *settlement);
+                    },
+                    Err(_) => {
+                        ui.label(egui::RichText::new("Something went wrong when querying the settlement entity.\nThis is a bug, and you should report it.").color(Color32::RED));
+                    },
+                }
+            },
+        }
 
         if subnodes.contains_key(&element) {
-            egui::CollapsingHeader::new("Children")
-            .id_source(EntityStringHashable(element, "children_elements".to_string()))
-            .show(ui, |ui| {
-                let children = &subnodes[&element];
-                for child in children {
-                    recursively_create_ui(*child, &subnodes, ui, world, regions, settlements);
-                }
-            });
+            ui.add_space(6.0);
+            ui.label("Sub-regions and settlements");
+            let children = &subnodes[&element];
+            for child in children {
+                recursively_create_ui(*child, &subnodes, queue, ui, world, regions, settlements);
+            }
         }
     });
 }
 
 fn region_ui(
+    queue: &mut CommandQueue,
     ui: &mut egui::Ui,
+    entity: Entity,
+    name: &mut Name,
+    region: &mut Region,
 ) {
-    ui.label("Region");
+    ui.horizontal(|ui| {
+        if ui.button("New child region").clicked() {
+            queue.push(SpawnChild { bundle: RegionBundle::default(), parent: entity });
+        }
+        
+        if ui.button("New child settlement").clicked() {
+            queue.push(SpawnChild { bundle: SettlementBundle::default(), parent: entity });
+        }
+
+        if ui.button("Delete this object").clicked() {
+            queue.push(DespawnRecursive { entity });
+        }
+    });
+
+    ui.add_space(6.0);
+
+    egui::Grid::new(EntityStringHashable(entity, "region_editor".to_string()))
+    .show(ui, |ui| {
+        ui.label("Name");
+        ui.add(egui::TextEdit::singleline(&mut name.0).min_size(eframe::emath::Vec2::new(250.0, 0.0)));
+        ui.end_row();
+    });
 }
 
 fn settlement_ui(
+    queue: &mut CommandQueue,
     ui: &mut egui::Ui,
+    entity: Entity,
+    name: &mut Name,
+    settlement: &mut Settlement,
 ) {
-    ui.label("Settlement");
+    if ui.button("Delete this object").clicked() {
+        queue.push(DespawnRecursive { entity });
+    }
+
+    ui.add_space(6.0);
+
+    egui::Grid::new(EntityStringHashable(entity, "settlement_editor".to_string()))
+    .show(ui, |ui| {
+        ui.label("Name");
+        ui.add(egui::TextEdit::singleline(&mut name.0).min_size(eframe::emath::Vec2::new(250.0, 0.0)));
+        ui.end_row();
+
+        ui.label("Population");
+        ui.add(egui::DragValue::new(&mut settlement.population));
+        ui.end_row();
+    });
 }

@@ -1,5 +1,6 @@
 mod edit;
 mod view;
+mod ecs;
 
 use std::collections::BTreeMap;
 use bevy::ecs::system::CommandQueue;
