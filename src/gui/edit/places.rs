@@ -3,6 +3,8 @@ use bevy::{ecs::system::{CommandQueue, Spawn}, prelude::{Or, Entity, With, Paren
 use eframe::{egui, epaint::Color32};
 use crate::{world::{sim::SimulationData, place::{Settlement, Region, RegionBundle, SettlementBundle}, thing::Name}, gui::{EntityStringHashable, ecs::SpawnChild}};
 
+const SEARCH_KEY: &str = "edit_places_search";
+
 pub(super) fn edit_places_ui(
     ui: &mut egui::Ui,
     state: &mut BTreeMap<String, String>,
@@ -17,23 +19,40 @@ pub(super) fn edit_places_ui(
         if ui.button("New settlement").clicked() {
             queue.push(Spawn { bundle: SettlementBundle::default() });
         }
+        
+        if let Some(value) = state.get_mut(SEARCH_KEY) {
+            ui.add_sized(ui.available_size(), egui::TextEdit::singleline(value).hint_text("Enter a search term..."));
+        } else {
+            state.insert(SEARCH_KEY.to_string(), "".to_string());
+        }
     });
 
     ui.separator();
 
     let world = &mut sim.app.world;
 
-    let mut all_nodes = world.query_filtered::<(Entity, Option<&Parent>, Option<&Children>), Or<(With<Region>, With<Settlement>)>>();
+    let mut all_nodes = world.query_filtered::<(Entity, &Name, Option<&Parent>, Option<&Children>), Or<(With<Region>, With<Settlement>)>>();
 
     let ilen = all_nodes.iter(&world).len();
     let mut roots: Vec<Entity> = Vec::with_capacity(ilen);
     let mut subnodes: BTreeMap<Entity, Vec<Entity>> = BTreeMap::new();
 
-    for (node, parent, children) in all_nodes.iter(&world) {
+    let search_term = state.get(SEARCH_KEY);
+    for (node, name, parent, children) in all_nodes.iter(&world) {
+        // Filtering
+        if let Some(search_term) = search_term {
+            let search_term = search_term.to_lowercase();
+            if !search_term.is_empty() && !name.0.to_lowercase().contains(&search_term) {
+                continue;
+            }
+        }
+
+        // This has no parents and will be iterated first
         if parent.is_none() {
             roots.push(node);
         }
 
+        // Child entities to iterate as well
         if children.is_some() {
             let children = children.unwrap().iter();
             let mut set = Vec::with_capacity(children.len());
@@ -45,6 +64,8 @@ pub(super) fn edit_places_ui(
             subnodes.insert(node, set);
         }
     }
+
+    roots.sort();
 
     let mut regions = world.query_filtered::<(Entity, &mut Name, &mut Region), Without<Settlement>>();
     let mut settlements = world.query_filtered::<(Entity, &mut Name, &mut Settlement), Without<Region>>();
