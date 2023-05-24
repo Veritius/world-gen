@@ -1,4 +1,3 @@
-use std::sync::RwLockReadGuard;
 use eframe::egui::{self, plot::{Plot, PlotPoints, Line, Legend, Corner}};
 use crate::world::sim::{SimulationBoundary, RECORD_LENGTH};
 
@@ -16,6 +15,7 @@ pub(super) fn tick_time_plot(
     .include_x(RECORD_LENGTH as f64)
     .include_y(0.0)
     .include_y(0.005)
+    .auto_bounds_y()
     .show_x(false)
     .label_formatter(|name, value| {
         if value.y < 1.0 {
