@@ -8,6 +8,7 @@ pub const MIN_SIM_STEPS: u32 = 10;
 pub const RECORD_LENGTH: usize = 250;
 
 pub type Boundary = Arc<RwLock<SimulationBoundary>>;
+pub type SimulationReturn = Result<SimulationData, SimulationError>;
 
 /// The simulation of the world.
 pub struct Simulation {
@@ -69,7 +70,7 @@ impl Simulation {
         let status_for_thread = status.clone();
         
         // Create execution thread
-        let thread: JoinHandle<SimulationData> = thread::spawn(move || {
+        let thread: JoinHandle<SimulationReturn> = thread::spawn(move || {
             // Take ownership
             let status = status_for_thread;
             let mut app = app;
@@ -80,7 +81,7 @@ impl Simulation {
 
                 // Check we aren't due to stop
                 if status.read().unwrap().stop_next_tick || (cfg.increments_completed == cfg.increments_for_completion) {
-                    return SimulationData { app };
+                    return Ok(SimulationData { app });
                 }
 
                 // Time before the tick happens
@@ -98,6 +99,7 @@ impl Simulation {
                 // Increase increment counter by 1
                 let mut cfg = app.world.resource_mut::<SimulationConfig>();
                 cfg.increments_completed += 1;
+                let should_exit = cfg.increments_completed >= cfg.increments_for_completion;
 
                 // Write to boundary
                 let mut status = status.write().unwrap();
@@ -119,7 +121,13 @@ impl Simulation {
                 push_to_cap::<f64>(RECORD_LENGTH, &mut status.tick_time_history, elapsed.as_secs_f64());
                 push_to_cap::<f64>(RECORD_LENGTH, &mut status.entity_count_history, app.world.query::<Entity>().iter(&app.world).len() as f64);
                 push_to_cap::<f64>(RECORD_LENGTH, &mut status.people_count_history, app.world.query_filtered::<Entity, With<Person>>().iter(&app.world).len() as f64);
-                push_to_cap::<f64>(RECORD_LENGTH, &mut status.place_count_history, app.world.query_filtered::<Entity, Or<(With<Region>, With<Settlement>)>>().iter(&app.world).len() as f64)
+                push_to_cap::<f64>(RECORD_LENGTH, &mut status.place_count_history, app.world.query_filtered::<Entity, Or<(With<Region>, With<Settlement>)>>().iter(&app.world).len() as f64);
+
+                // Exit if simulation is complete
+                if should_exit {
+                    status.simulation_exited = true;
+                    return Ok(SimulationData { app });
+                }
             }
         });
 
@@ -154,9 +162,14 @@ impl Simulation {
 
         // Wait for thread
         if let Ok(data) = thread.join() {
-            self.state = SimulationState::Frozen(data);
-            // Success!
-            return Ok(self);
+            match data {
+                Ok(data) => {
+                    self.state = SimulationState::Frozen(data);
+                    return Ok(self);
+                
+                },
+                Err(error) => { return Err(error) },
+            }
         } else {
             return Err(SimulationError::SimulationPanicked);
         };
@@ -199,7 +212,7 @@ pub enum SimulationState {
     /// The simulation is executing on another thread, and must be communicated with using the boundary.
     Executing {
         boundary: Boundary,
-        thread: JoinHandle<SimulationData>,
+        thread: JoinHandle<SimulationReturn>,
     },
 }
 
@@ -226,8 +239,10 @@ pub struct SimulationData{
 #[derive(Debug)]
 /// Allows communication between the GUI and the simulation thread.
 pub struct SimulationBoundary {
-    /// If `true`, the simulation will freeze on the next tick.
+    /// If `true`, the simulation will freeze on the next tick. This should be written by UI only.
     pub stop_next_tick: bool,
+    /// If `true` the simulation has exited. This might be because it's finished, or because an error occurred. This should be written by the simulation only.
+    pub simulation_exited: bool,
 
     // Completion measurement
     pub steps_complete: u32,
@@ -244,6 +259,7 @@ impl Default for SimulationBoundary {
     fn default() -> Self {
         Self {
             stop_next_tick: false,
+            simulation_exited: false,
 
             steps_complete: 0,
             steps_total: 0,

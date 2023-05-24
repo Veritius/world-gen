@@ -17,7 +17,7 @@ use crate::world::presets::fwd_day::add_forward_day_presets;
 use crate::world::presets::fwd_mon::add_forward_month_presets;
 use crate::world::sim::{Simulation, validate_world, SimulationData};
 
-use self::notifs::{Notification, show_notifications, update_notifications};
+use self::notifs::{Notification, show_notifications, update_notifications, NotificationType};
 use self::view::view_ui;
 use self::edit::edit_ui;
 
@@ -73,6 +73,8 @@ impl App for WorldGenApp {
                             // Always repaint the UI while the simulation is in progress
                             if boundary.steps_complete != boundary.steps_total { ctx.request_repaint(); }
 
+                            if boundary.simulation_exited { self.memory.markers.insert("try_freeze_simulation".to_string()); }
+
                             view_ui(ui, &mut self.memory, boundary);
                         },
                     }
@@ -100,7 +102,17 @@ impl App for WorldGenApp {
         // Freeze simulation
         if self.memory.markers.contains("try_freeze_simulation") {
             self.memory.markers.remove("try_freeze_simulation");
-            replace_with_or_abort(&mut self.simulation, |sim| sim.freeze().unwrap());
+            replace_with_or_abort(&mut self.simulation, |sim| {
+                match sim.freeze() {
+                    Ok(success) => {
+                        success
+                    },
+                    Err(error) => {
+                        self.memory.notifications.push(Notification::new(format!("Simulation encountered an error: {:?}", error), 60.0, NotificationType::Error));
+                        Simulation::default() // create new default sim
+                    },
+                }
+            });
         }
     }
 }
