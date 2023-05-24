@@ -1,6 +1,7 @@
 mod edit;
 mod view;
 mod ecs;
+mod notifs;
 
 use std::collections::BTreeMap;
 use bevy::ecs::system::CommandQueue;
@@ -16,6 +17,7 @@ use crate::world::presets::fwd_day::add_forward_day_presets;
 use crate::world::presets::fwd_mon::add_forward_month_presets;
 use crate::world::sim::{Simulation, validate_world, SimulationData};
 
+use self::notifs::{Notification, show_notifications};
 use self::view::view_ui;
 use self::edit::edit_ui;
 
@@ -28,6 +30,7 @@ pub struct WorldGenApp {
 struct AppMemory {
     markers: HashSet<String>,
     string_map: BTreeMap<String, String>,
+    notifications: Vec<Notification>,
 }
 
 impl Default for AppMemory {
@@ -35,6 +38,7 @@ impl Default for AppMemory {
         Self {
             markers: HashSet::new(),
             string_map: BTreeMap::new(),
+            notifications: vec![],
         }
     }
 }
@@ -75,6 +79,8 @@ impl App for WorldGenApp {
                 Err(_) => todo!(),
             }
         });
+
+        show_notifications(&mut self.memory.notifications, ctx);
 
         // Start simulation
         if self.memory.markers.contains("try_execute_simulation") {
