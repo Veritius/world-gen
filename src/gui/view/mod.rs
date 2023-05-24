@@ -3,25 +3,31 @@ mod plots;
 use std::sync::RwLockReadGuard;
 use eframe::egui;
 use crate::world::sim::SimulationBoundary;
-use self::plots::stat_plots;
+use self::plots::{entity_count_plot, tick_time_plot};
 
 use super::AppMemory;
 
 pub(super) fn view_ui(
     ui: &mut egui::Ui,
-    memory: &mut AppMemory,
+    _memory: &mut AppMemory,
     sim: RwLockReadGuard<SimulationBoundary>,
 ) {
-    ui.horizontal(|ui| {
-        if ui.button("Stop simulation").clicked() {
-            memory.markers.insert("try_freeze_simulation".to_owned());
-        }
+    let sim_ref = &*sim;
+    let ctx = ui.ctx();
 
-        let percent = sim.steps_complete as f32 / sim.steps_total as f32;
-        ui.add(egui::ProgressBar::new(percent).show_percentage());
+    // Start plots
+    egui::Window::new("Tick time")
+    .default_size([400.0, 120.0])
+    .default_open(false)
+    .show(ctx, |ui| {
+        tick_time_plot(ui, sim_ref);
     });
 
-    ui.separator();
-
-    stat_plots(ui, sim);
+    egui::Window::new("Entity count")
+    .default_size([400.0, 120.0])
+    .default_open(false)
+    .show(ctx, |ui| {
+        entity_count_plot(ui, sim_ref);
+    });
+    // End plots
 }
