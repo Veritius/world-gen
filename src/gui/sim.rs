@@ -33,7 +33,7 @@ pub(super) fn simulation_fns(
                 Err(error) => {
                     let errorstr = format!("Simulation encountered an error: {:?}", error);
                     app.memory.modal_popup = Some(ModalWindow::new(&errorstr).outline_color(Color32::LIGHT_RED));
-                    app.memory.notifications.push(Notification::new(&errorstr, 60.0, NotificationType::Error));
+                    app.memory.notifications.push(Notification::new(&errorstr, 20.0, NotificationType::Error));
                     Simulation::default() // create new default sim
                 },
             }
