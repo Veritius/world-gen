@@ -276,6 +276,6 @@ impl Default for SimulationBoundary {
 pub struct SimulationComplete;
 
 /// Checks over everything in the world and ensures it's all working well.
-pub fn validate_world(world: &mut World) {
+pub fn validate_world(_world: &mut World) {
 
 }

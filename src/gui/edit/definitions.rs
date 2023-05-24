@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use bevy::ecs::{system::{CommandQueue, Spawn, Despawn}, prelude::Entity, world::Mut};
 use eframe::egui;
 use crate::{world::{sim::SimulationData, defs::species::{SpeciesBundle, Species}, thing::Name}, gui::{EntityStringHashable, AppMemory}};

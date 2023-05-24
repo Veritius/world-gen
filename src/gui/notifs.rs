@@ -1,7 +1,8 @@
 //! "Notification" elements
 
-use eframe::{egui::{self, Id, Frame, Margin, LayerId}, epaint::{Color32, FontId, Rect, Pos2}};
+use eframe::{egui::{self, Margin}, epaint::Color32};
 
+#[allow(dead_code)]
 pub enum NotificationType {
     Info,
     Warning,
@@ -10,7 +11,6 @@ pub enum NotificationType {
 
 pub struct Notification {
     remaining_time: f32,
-    original_time: f32,
 
     text: String,
     kind: NotificationType,
@@ -20,7 +20,6 @@ impl Notification {
     pub fn new(text: impl Into<String>, time: f32, kind: NotificationType) -> Notification {
         Self {
             remaining_time: time,
-            original_time: time,
 
             text: text.into(),
             kind,

@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use bevy::ecs::{system::CommandQueue, world::Mut};
 use eframe::egui;
 use crate::{world::{sim::SimulationData, defs::{SimulationConfig, HistoryDirection, Timespan}}, gui::AppMemory};

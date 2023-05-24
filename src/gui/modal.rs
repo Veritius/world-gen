@@ -1,7 +1,7 @@
 //! Big windows that can only be removed by confirmation and block interaction behind them.
 
 use std::collections::BTreeSet;
-use eframe::{epaint::{Color32, Stroke, Vec2, FontId}, egui::{self, Margin}};
+use eframe::{epaint::{Color32, Stroke, FontId}, egui::{self, Margin}};
 
 pub struct ModalWindow {
     outline_color: Color32,
@@ -61,6 +61,7 @@ impl ModalWindow {
         self
     }
 
+    #[allow(dead_code)]
     pub fn internal_color(mut self, color: Color32) -> Self {
         self.internal_color = color;
         self

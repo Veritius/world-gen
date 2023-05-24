@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use bevy::{ecs::system::{CommandQueue, Spawn}, prelude::{Or, Entity, With, Parent, Children, QueryState, Without, World, DespawnRecursive, RemoveParent, AddChild}};
+use bevy::{ecs::system::{CommandQueue, Spawn}, prelude::{Or, Entity, With, Parent, Children, QueryState, Without, World, DespawnRecursive}};
 use eframe::{egui, epaint::Color32};
 use crate::{world::{sim::SimulationData, place::{Settlement, Region, RegionBundle, SettlementBundle}, thing::Name}, gui::{EntityStringHashable, ecs::SpawnChild, AppMemory}};
 
@@ -153,7 +153,7 @@ fn region_ui(
     region_list: &Vec<(Entity, String)>,
     entity: Entity,
     name: &mut Name,
-    region: &mut Region,
+    _region: &mut Region,
 ) {
     ui.horizontal(|ui| {
         change_owner_button(ui, queue, region_list, entity);
