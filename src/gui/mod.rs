@@ -3,6 +3,7 @@ mod view;
 mod ecs;
 mod notifs;
 mod modal;
+mod sim;
 
 use std::collections::{BTreeMap, BTreeSet};
 use bevy::ecs::system::CommandQueue;
@@ -20,6 +21,7 @@ use crate::world::sim::{Simulation, validate_world, SimulationData};
 
 use self::modal::ModalWindow;
 use self::notifs::{Notification, show_notifications, update_notifications, NotificationType};
+use self::sim::simulation_fns;
 use self::view::view_ui;
 use self::edit::edit_ui;
 
@@ -99,38 +101,7 @@ impl App for WorldGenApp {
             self.memory.modal_popup = None;
         }
 
-        // Start simulation
-        if self.memory.markers.contains("try_execute_simulation") {
-            self.memory.markers.remove("try_execute_simulation");
-
-            match self.simulation.current_or_err() {
-                Ok(simulation) => {
-                    systems_check(simulation);
-                },
-                Err(_error) => todo!(),
-            }
-
-            replace_with_or_abort(&mut self.simulation, |sim| sim.try_execute().0);
-        }
-
-        // Freeze simulation
-        if self.memory.markers.contains("try_freeze_simulation") {
-            self.memory.markers.remove("try_freeze_simulation");
-            replace_with_or_abort(&mut self.simulation, |sim| {
-                match sim.freeze() {
-                    Ok(success) => {
-                        self.memory.modal_popup = Some(ModalWindow::new("The simulation successfully exited.").outline_color(Color32::LIGHT_GREEN));
-                        success
-                    },
-                    Err(error) => {
-                        let errorstr = format!("Simulation encountered an error: {:?}", error);
-                        self.memory.modal_popup = Some(ModalWindow::new(&errorstr).outline_color(Color32::LIGHT_RED));
-                        self.memory.notifications.push(Notification::new(&errorstr, 60.0, NotificationType::Error));
-                        Simulation::default() // create new default sim
-                    },
-                }
-            });
-        }
+        simulation_fns(self);
     }
 }
 
