@@ -105,8 +105,9 @@ impl App for WorldGenApp {
                 }
             },
             // The simulation boundary is poisoned
-            // TODO: Handle this
-            Err(_) => todo!(),
+            Err(_) => {
+                self.memory.markers.insert("try_freeze_simulation".to_owned());
+            },
         }
         
         // Modal windows
