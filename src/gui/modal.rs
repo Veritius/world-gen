@@ -14,11 +14,11 @@ impl ModalWindow {
         // Figure out how much space to give to the frame
         let mut frame_size: [f32; 2] = [0.0; 2];
         ctx.fonts(|i| {
-            let text_size = i.layout_no_wrap(self.text.clone(), FontId::default(), Color32::DEBUG_COLOR).rect;
+            let text_size = i.layout(self.text.clone(), FontId::default(), Color32::DEBUG_COLOR, 400.0).rect;
             frame_size = [text_size.width(), text_size.height()];
         });
-        frame_size[0] += 30.0;
-        frame_size[1] += 20.0;
+        frame_size[0] += 20.0;
+        frame_size[1] += 0.0;
 
         // The frame for the window
         let frame = egui::Frame::none()
@@ -39,7 +39,7 @@ impl ModalWindow {
         .show(ctx, |ui| {
             ui.centered_and_justified(|ui| {
                 ui.label(self.text.clone());
-                ui.add_space(2.0);
+                ui.add_space(6.0);
 
                 if ui.button("Ok").clicked() {
                     markers.insert("remove_modal".to_string());

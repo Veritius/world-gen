@@ -126,6 +126,7 @@ impl Simulation {
                 // Exit if simulation is complete
                 if should_exit {
                     status.simulation_exited = true;
+                    return Err(SimulationError::BoundaryPoisoned);
                     return Ok(SimulationData { app });
                 }
             }
