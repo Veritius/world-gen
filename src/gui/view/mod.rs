@@ -1,15 +1,16 @@
 use std::{sync::RwLockReadGuard, collections::BTreeMap};
 use eframe::egui::{self, plot::{PlotPoints, Line, Plot, PlotUi, Legend, Corner}};
 use crate::world::sim::{SimulationBoundary, RECORD_LENGTH};
+use super::AppMemory;
 
 pub(super) fn view_ui(
     ui: &mut egui::Ui,
-    state: &mut BTreeMap<String, String>,
+    memory: &mut AppMemory,
     sim: RwLockReadGuard<SimulationBoundary>,
 ) {
     ui.horizontal(|ui| {
         if ui.button("Stop simulation").clicked() {
-            state.insert("try_freeze_simulation".to_string(), "".to_string());
+            memory.markers.insert("try_freeze_simulation".to_owned());
         }
 
         let percent = sim.steps_complete as f32 / sim.steps_total as f32;

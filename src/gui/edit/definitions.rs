@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use bevy::ecs::{system::{CommandQueue, Spawn, Despawn}, prelude::Entity, world::Mut};
 use eframe::egui;
-use crate::{world::{sim::SimulationData, defs::species::{SpeciesBundle, Species}, thing::Name}, gui::EntityStringHashable};
+use crate::{world::{sim::SimulationData, defs::species::{SpeciesBundle, Species}, thing::Name}, gui::{EntityStringHashable, AppMemory}};
 
 const SUBTAB_KEY: &str = "edit_definitions_tab";
 
@@ -12,12 +12,12 @@ const MIN_HUMANOID_AGE: u32 = 18;
 
 pub(super) fn edit_definitions_ui(
     ui: &mut egui::Ui,
-    state: &mut BTreeMap<String, String>,
+    memory: &mut AppMemory,
     queue: &mut CommandQueue,
     sim: &mut SimulationData,
 ) {
-    if state.get(SUBTAB_KEY).is_none() { state.insert(SUBTAB_KEY.to_owned(), "Species".to_string()); }
-    let current_tab = state.get_mut(SUBTAB_KEY).unwrap();
+    if memory.string_map.get(SUBTAB_KEY).is_none() { memory.string_map.insert(SUBTAB_KEY.to_owned(), "Species".to_string()); }
+    let current_tab = memory.string_map.get_mut(SUBTAB_KEY).unwrap();
 
     // Tab change buttons
     egui::ScrollArea::horizontal()
@@ -33,14 +33,13 @@ pub(super) fn edit_definitions_ui(
     
     // Tabs
     match current_tab.as_str() {
-        "Species" => species_menu(ui, state, queue, sim),
+        "Species" => species_menu(ui, queue, sim),
         _ => todo!("Handle this case"),
     }
 }
 
 fn species_menu(
     ui: &mut egui::Ui,
-    _state: &mut BTreeMap<String, String>,
     queue: &mut CommandQueue,
     sim: &mut SimulationData,
 ) {

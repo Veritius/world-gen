@@ -5,6 +5,7 @@ mod ecs;
 use std::collections::BTreeMap;
 use bevy::ecs::system::CommandQueue;
 use bevy::ecs::prelude::Entity;
+use bevy::utils::HashSet;
 use eframe::{egui, Frame, App};
 use either::Either::{Right, Left};
 use replace_with::replace_with_or_abort;
@@ -20,14 +21,29 @@ use self::edit::edit_ui;
 
 pub struct WorldGenApp {
     simulation: Simulation,
-    state: BTreeMap<String, String>,
+    memory: AppMemory,
+}
+
+/// Used to store things across frames.
+struct AppMemory {
+    markers: HashSet<String>,
+    string_map: BTreeMap<String, String>,
+}
+
+impl Default for AppMemory {
+    fn default() -> Self {
+        Self {
+            markers: HashSet::new(),
+            string_map: BTreeMap::new(),
+        }
+    }
 }
 
 impl Default for WorldGenApp {
     fn default() -> Self {
         Self {
             simulation: Simulation::default(),
-            state: BTreeMap::new(),
+            memory: AppMemory::default(),
         }
     }
 }
@@ -42,7 +58,7 @@ impl App for WorldGenApp {
                         // The simulation is frozen and can be edited
                         Left(data) => {
                             let mut queue = CommandQueue::default();
-                            edit_ui(ui, &mut self.state, &mut queue, data);
+                            edit_ui(ui, &mut self.memory, &mut queue, data);
                             queue.apply(&mut data.app.world);
                         },
                         // The simulation is running and the boundary can be read
@@ -50,7 +66,7 @@ impl App for WorldGenApp {
                             // Always repaint the UI while the simulation is in progress
                             if boundary.steps_complete != boundary.steps_total { ctx.request_repaint(); }
 
-                            view_ui(ui, &mut self.state, boundary);
+                            view_ui(ui, &mut self.memory, boundary);
                         },
                     }
                 },
@@ -61,8 +77,8 @@ impl App for WorldGenApp {
         });
 
         // Start simulation
-        if self.state.contains_key("try_execute_simulation") {
-            self.state.remove("try_execute_simulation");
+        if self.memory.markers.contains("try_execute_simulation") {
+            self.memory.markers.remove("try_execute_simulation");
 
             match self.simulation.current_or_err() {
                 Ok(simulation) => {
@@ -75,8 +91,8 @@ impl App for WorldGenApp {
         }
 
         // Freeze simulation
-        if self.state.contains_key("try_freeze_simulation") {
-            self.state.remove("try_freeze_simulation");
+        if self.memory.markers.contains("try_freeze_simulation") {
+            self.memory.markers.remove("try_freeze_simulation");
             replace_with_or_abort(&mut self.simulation, |sim| sim.freeze().unwrap());
         }
     }

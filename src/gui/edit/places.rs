@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use bevy::{ecs::system::{CommandQueue, Spawn}, prelude::{Or, Entity, With, Parent, Children, QueryState, Without, World, DespawnRecursive, RemoveParent, AddChild}};
 use eframe::{egui, epaint::Color32};
-use crate::{world::{sim::SimulationData, place::{Settlement, Region, RegionBundle, SettlementBundle}, thing::Name}, gui::{EntityStringHashable, ecs::SpawnChild}};
+use crate::{world::{sim::SimulationData, place::{Settlement, Region, RegionBundle, SettlementBundle}, thing::Name}, gui::{EntityStringHashable, ecs::SpawnChild, AppMemory}};
 
 use super::helpers::change_owner_button;
 
@@ -9,7 +9,7 @@ const SEARCH_KEY: &str = "edit_places_search";
 
 pub(super) fn edit_places_ui(
     ui: &mut egui::Ui,
-    state: &mut BTreeMap<String, String>,
+    memory: &mut AppMemory,
     queue: &mut CommandQueue,
     sim: &mut SimulationData,
 ) {
@@ -22,10 +22,10 @@ pub(super) fn edit_places_ui(
             queue.push(Spawn { bundle: SettlementBundle::default() });
         }
         
-        if let Some(value) = state.get_mut(SEARCH_KEY) {
+        if let Some(value) = memory.string_map.get_mut(SEARCH_KEY) {
             ui.add_sized(ui.available_size(), egui::TextEdit::singleline(value).hint_text("Enter a search term..."));
         } else {
-            state.insert(SEARCH_KEY.to_string(), "".to_string());
+            memory.string_map.insert(SEARCH_KEY.to_string(), "".to_string());
         }
     });
 
@@ -39,7 +39,7 @@ pub(super) fn edit_places_ui(
     let mut roots: Vec<Entity> = Vec::with_capacity(ilen);
     let mut subnodes: BTreeMap<Entity, Vec<Entity>> = BTreeMap::new();
 
-    let search_term = state.get(SEARCH_KEY);
+    let search_term = memory.string_map.get(SEARCH_KEY);
     for (node, name, parent, children) in all_nodes.iter(&world) {
         // Filtering
         if let Some(search_term) = search_term {

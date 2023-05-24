@@ -4,7 +4,6 @@ mod definitions;
 mod places;
 mod helpers;
 
-use std::collections::BTreeMap;
 use bevy::ecs::system::CommandQueue;
 use eframe::egui;
 use crate::world::sim::SimulationData;
@@ -16,17 +15,19 @@ use self::{
     places::edit_places_ui,
 };
 
+use super::AppMemory;
+
 const TAB_KEY: &'static str = "edit_current_tab";
 
 pub(super) fn edit_ui(
     ui: &mut egui::Ui,
-    state: &mut BTreeMap<String, String>,
+    memory: &mut AppMemory,
     queue: &mut CommandQueue,
     sim: &mut SimulationData,
 ) {
     // Find the current tab
-    if state.get(TAB_KEY).is_none() { state.insert(TAB_KEY.to_owned(), "Meta".to_string()); }
-    let current_tab = state.get_mut(TAB_KEY).unwrap();
+    if memory.string_map.get(TAB_KEY).is_none() { memory.string_map.insert(TAB_KEY.to_owned(), "Meta".to_string()); }
+    let current_tab = memory.string_map.get_mut(TAB_KEY).unwrap();
 
     // Tab change buttons
     egui::ScrollArea::horizontal().auto_shrink([false, true]).show(ui, |ui| {
@@ -42,10 +43,10 @@ pub(super) fn edit_ui(
 
     // Tabs
     match current_tab.as_str() {
-        "Meta" => edit_meta_ui(ui, state, queue, sim),
-        "People" => edit_people_ui(ui, state, queue, sim),
-        "Definitions" => edit_definitions_ui(ui, state, queue, sim),
-        "Places" => edit_places_ui(ui, state, queue, sim),
+        "Meta" => edit_meta_ui(ui, memory, queue, sim),
+        "People" => edit_people_ui(ui, memory, queue, sim),
+        "Definitions" => edit_definitions_ui(ui, memory, queue, sim),
+        "Places" => edit_places_ui(ui, memory, queue, sim),
         _ => todo!("Handle this case"),
     }
 }

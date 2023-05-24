@@ -1,11 +1,11 @@
 use std::collections::BTreeMap;
 use bevy::ecs::{system::CommandQueue, world::Mut};
 use eframe::egui;
-use crate::world::{sim::SimulationData, defs::{SimulationConfig, HistoryDirection, Timespan}};
+use crate::{world::{sim::SimulationData, defs::{SimulationConfig, HistoryDirection, Timespan}}, gui::AppMemory};
 
 pub(super) fn edit_meta_ui(
     ui: &mut egui::Ui,
-    state: &mut BTreeMap<String, String>,
+    memory: &mut AppMemory,
     _queue: &mut CommandQueue,
     sim: &mut SimulationData,
 ) {
@@ -18,7 +18,7 @@ pub(super) fn edit_meta_ui(
     ui.horizontal(|ui| {
         ui.add_enabled_ui(config.increments_completed < config.increments_for_completion, |ui| {
             if ui.button("Begin simulation").clicked() {
-                state.insert("try_execute_simulation".to_string(), "true".to_string());
+                memory.markers.insert("try_execute_simulation".to_string());
             }
         });
 

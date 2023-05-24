@@ -1,13 +1,13 @@
 use std::{collections::{BTreeMap, BTreeSet}, marker::PhantomData};
 use bevy::ecs::{system::{CommandQueue, Spawn, Insert, Remove, Despawn}, query::With, prelude::Entity};
 use eframe::egui;
-use crate::{world::{sim::SimulationData, person::{PersonBundle, Person, Personality}, thing::{Name, Age, Important}, defs::species::{Species, AssociatedSpecies}}, gui::EntityStringHashable};
+use crate::{world::{sim::SimulationData, person::{PersonBundle, Person, Personality}, thing::{Name, Age, Important}, defs::species::{Species, AssociatedSpecies}}, gui::{EntityStringHashable, AppMemory}};
 
 const SEARCH_KEY: &str = "edit_people_search";
 
 pub(super) fn edit_people_ui(
     ui: &mut egui::Ui,
-    state: &mut BTreeMap<String, String>,
+    memory: &mut AppMemory,
     queue: &mut CommandQueue,
     sim: &mut SimulationData,
 ) {
@@ -23,21 +23,21 @@ pub(super) fn edit_people_ui(
             )});
         };
 
-        if let Some(value) = state.get_mut(SEARCH_KEY) {
+        if let Some(value) = memory.string_map.get_mut(SEARCH_KEY) {
             egui::TextEdit::singleline(value).hint_text("Enter a search term...").show(ui);
         } else {
-            state.insert(SEARCH_KEY.to_string(), "".to_string());
+            memory.string_map.insert(SEARCH_KEY.to_string(), "".to_string());
         };
     });
 
     ui.separator();
 
-    character_editor(ui, state, queue, sim);
+    character_editor(ui, memory, queue, sim);
 }
 
 fn character_editor(
     ui: &mut egui::Ui,
-    state: &mut BTreeMap<String, String>,
+    memory: &mut AppMemory,
     queue: &mut CommandQueue,
     sim: &mut SimulationData,
 ) {
@@ -59,7 +59,7 @@ fn character_editor(
         species_map.insert(entity, (name.clone(), species.clone()));
     }
 
-    let search_term = state.get(SEARCH_KEY);
+    let search_term = memory.string_map.get(SEARCH_KEY);
 
     egui::ScrollArea::both()
     .id_source("people_edit")
