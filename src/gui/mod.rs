@@ -63,33 +63,51 @@ impl App for WorldGenApp {
         update_notifications(&mut self.memory.notifications, ctx);
         show_notifications(&self.memory.notifications, ctx);
 
-        egui::CentralPanel::default().show(ctx, |ui| {
-            // Show a different UI based on the simulation state
-            match self.simulation.current() {
-                Ok(value) => {
-                    match value {
-                        // The simulation is frozen and can be edited
-                        Left(data) => {
+        // Show a different UI based on the simulation state
+        match self.simulation.current() {
+            Ok(value) => {
+                match value {
+                    // The simulation is frozen and can be edited
+                    Left(data) => {
+                        egui::CentralPanel::default()
+                        .show(ctx, |ui| {
                             let mut queue = CommandQueue::default();
                             edit_ui(ui, &mut self.memory, &mut queue, data);
                             queue.apply(&mut data.app.world);
-                        },
-                        // The simulation is running and the boundary can be read
-                        Right(boundary) => {
-                            // Always repaint the UI while the simulation is in progress
-                            if boundary.steps_complete != boundary.steps_total { ctx.request_repaint(); }
+                        });
+                    },
+                    // The simulation is running and the boundary can be read
+                    Right(boundary) => {
+                        // Always repaint the UI while the simulation is in progress
+                        if boundary.steps_complete != boundary.steps_total { ctx.request_repaint(); }
 
-                            if boundary.simulation_exited { self.memory.markers.insert("try_freeze_simulation".to_string()); }
+                        if boundary.simulation_exited { self.memory.markers.insert("try_freeze_simulation".to_string()); }
 
+                        egui::TopBottomPanel::top("sim_status_panel")
+                        .show_separator_line(false)
+                        .show(ctx, |ui| {
+                            ui.add_space(2.0);
+                            ui.horizontal(|ui| {
+                                if ui.button("Stop simulation").clicked() {
+                                    self.memory.markers.insert("try_freeze_simulation".to_owned());
+                                }
+                        
+                                let percent = boundary.steps_complete as f32 / boundary.steps_total as f32;
+                                ui.add(egui::ProgressBar::new(percent).show_percentage());
+                            });
+                            ui.add_space(1.0);
+                        });
+
+                        egui::CentralPanel::default().show(ctx, |ui| {
                             view_ui(ui, &mut self.memory, boundary);
-                        },
-                    }
-                },
-                // The simulation boundary is poisoned
-                // TODO: Handle this
-                Err(_) => todo!(),
-            }
-        });
+                        });
+                    },
+                }
+            },
+            // The simulation boundary is poisoned
+            // TODO: Handle this
+            Err(_) => todo!(),
+        }
         
         // Modal windows
         if let Some(popup) = &self.memory.modal_popup {

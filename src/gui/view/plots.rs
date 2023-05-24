@@ -2,14 +2,12 @@ use std::sync::RwLockReadGuard;
 use eframe::egui::{self, plot::{Plot, PlotPoints, Line, Legend, Corner}};
 use crate::world::sim::{SimulationBoundary, RECORD_LENGTH};
 
-pub(super) fn stat_plots(
+pub(super) fn tick_time_plot(
     ui: &mut egui::Ui,
-    sim: RwLockReadGuard<SimulationBoundary>,
+    sim: &SimulationBoundary,
 ) {
     // Tick time display
-    ui.label("Time taken per simulation step (in seconds)");
     Plot::new("tick_time_plot")
-    .height(100.0)
     .allow_drag(false)
     .allow_scroll(false)
     .allow_zoom(false)
@@ -32,12 +30,12 @@ pub(super) fn stat_plots(
         let line = Line::new(points);
         plot_ui.line(line);
     });
+}
 
-    ui.add_space(10.0);
-
-    // Entity count
-    ui.label("Entity count");
-    
+pub(super) fn entity_count_plot(
+    ui: &mut egui::Ui,
+    sim: &SimulationBoundary,
+) {
     // Stats that will be shown in the graph
     let stats = [
         ("Total", &sim.entity_count_history),
@@ -47,7 +45,6 @@ pub(super) fn stat_plots(
 
     // Plot
     Plot::new("entity_count_plot")
-    .height(150.0)
     .allow_drag(false)
     .allow_scroll(false)
     .allow_zoom(false)
