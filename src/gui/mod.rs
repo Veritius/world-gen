@@ -2,11 +2,12 @@ mod edit;
 mod view;
 mod ecs;
 mod notifs;
+mod modal;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use bevy::ecs::system::CommandQueue;
 use bevy::ecs::prelude::Entity;
-use bevy::utils::HashSet;
+use eframe::epaint::{Color32, Vec2};
 use eframe::{egui, Frame, App};
 use either::Either::{Right, Left};
 use replace_with::replace_with_or_abort;
@@ -17,6 +18,7 @@ use crate::world::presets::fwd_day::add_forward_day_presets;
 use crate::world::presets::fwd_mon::add_forward_month_presets;
 use crate::world::sim::{Simulation, validate_world, SimulationData};
 
+use self::modal::ModalWindow;
 use self::notifs::{Notification, show_notifications, update_notifications, NotificationType};
 use self::view::view_ui;
 use self::edit::edit_ui;
@@ -28,16 +30,18 @@ pub struct WorldGenApp {
 
 /// Used to store things across frames.
 struct AppMemory {
-    markers: HashSet<String>,
+    markers: BTreeSet<String>,
     string_map: BTreeMap<String, String>,
+    modal_popup: Option<ModalWindow>,
     notifications: Vec<Notification>,
 }
 
 impl Default for AppMemory {
     fn default() -> Self {
         Self {
-            markers: HashSet::new(),
+            markers: BTreeSet::new(),
             string_map: BTreeMap::new(),
+            modal_popup: None,
             notifications: vec![],
         }
     }
@@ -84,6 +88,16 @@ impl App for WorldGenApp {
                 Err(_) => todo!(),
             }
         });
+        
+        // Modal windows
+        if let Some(popup) = &self.memory.modal_popup {
+            popup.display(ctx, &mut self.memory.markers);
+        }
+        
+        if self.memory.markers.contains("remove_modal") {
+            self.memory.markers.remove("remove_modal");
+            self.memory.modal_popup = None;
+        }
 
         // Start simulation
         if self.memory.markers.contains("try_execute_simulation") {
@@ -105,10 +119,13 @@ impl App for WorldGenApp {
             replace_with_or_abort(&mut self.simulation, |sim| {
                 match sim.freeze() {
                     Ok(success) => {
+                        self.memory.modal_popup = Some(ModalWindow::new("The simulation successfully exited.").outline_color(Color32::LIGHT_GREEN));
                         success
                     },
                     Err(error) => {
-                        self.memory.notifications.push(Notification::new(format!("Simulation encountered an error: {:?}", error), 60.0, NotificationType::Error));
+                        let errorstr = format!("Simulation encountered an error: {:?}", error);
+                        self.memory.modal_popup = Some(ModalWindow::new(&errorstr).outline_color(Color32::LIGHT_RED));
+                        self.memory.notifications.push(Notification::new(&errorstr, 60.0, NotificationType::Error));
                         Simulation::default() // create new default sim
                     },
                 }
