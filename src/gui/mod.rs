@@ -69,7 +69,8 @@ impl App for WorldGenApp {
                 match value {
                     // The simulation is frozen and can be edited
                     Left(data) => {
-                        egui::CentralPanel::default().show(ctx, |ui| {
+                        egui::CentralPanel::default()
+                        .show(ctx, |ui| {
                             let mut queue = CommandQueue::default();
                             edit_ui(ui, &mut self.memory, &mut queue, data);
                             queue.apply(&mut data.app.world);
@@ -82,7 +83,9 @@ impl App for WorldGenApp {
 
                         if boundary.simulation_exited { self.memory.markers.insert("try_freeze_simulation".to_string()); }
 
-                        egui::TopBottomPanel::top("sim_status_panel").show(ctx, |ui| {
+                        egui::TopBottomPanel::top("sim_status_panel")
+                        .show_separator_line(false)
+                        .show(ctx, |ui| {
                             ui.add_space(2.0);
                             ui.horizontal(|ui| {
                                 if ui.button("Stop simulation").clicked() {
