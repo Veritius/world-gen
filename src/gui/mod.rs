@@ -17,7 +17,7 @@ use crate::world::presets::fwd_day::add_forward_day_presets;
 use crate::world::presets::fwd_mon::add_forward_month_presets;
 use crate::world::sim::{Simulation, validate_world, SimulationData};
 
-use self::notifs::{Notification, show_notifications};
+use self::notifs::{Notification, show_notifications, update_notifications};
 use self::view::view_ui;
 use self::edit::edit_ui;
 
@@ -54,6 +54,9 @@ impl Default for WorldGenApp {
 
 impl App for WorldGenApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
+        update_notifications(&mut self.memory.notifications, ctx);
+        show_notifications(&self.memory.notifications, ctx);
+
         egui::CentralPanel::default().show(ctx, |ui| {
             // Show a different UI based on the simulation state
             match self.simulation.current() {
@@ -79,8 +82,6 @@ impl App for WorldGenApp {
                 Err(_) => todo!(),
             }
         });
-
-        show_notifications(&mut self.memory.notifications, ctx);
 
         // Start simulation
         if self.memory.markers.contains("try_execute_simulation") {
