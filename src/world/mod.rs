@@ -1,5 +1,6 @@
 pub mod sim;
 pub mod presets;
+pub mod time;
 
 pub mod common;
 pub mod event;

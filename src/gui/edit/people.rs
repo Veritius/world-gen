@@ -1,7 +1,7 @@
 use std::{collections::{BTreeMap, BTreeSet}, marker::PhantomData};
 use bevy::ecs::{system::{CommandQueue, Spawn, Insert, Remove, Despawn}, query::With, prelude::Entity};
 use eframe::egui;
-use crate::{world::{sim::SimulationData, person::{PersonBundle, Person, Personality}, common::{Name, Age, Important}, defs::species::{Species, AssociatedSpecies}, living::Living}, gui::{EntityStringHashable, AppMemory}};
+use crate::{world::{sim::SimulationData, person::{PersonBundle, Person, Personality}, common::{Name, Age, Important}, defs::species::{Species, AssociatedSpecies}, living::Living, time::TimeLength}, gui::{EntityStringHashable, AppMemory}};
 
 const SEARCH_KEY: &str = "edit_people_search";
 
@@ -18,7 +18,7 @@ pub(super) fn edit_people_ui(
                     person: Person,
                     personality: Personality::default(),
                     name: Name("John Doe".to_owned()),
-                    age: Age(32),
+                    age: Age(TimeLength::from_years(32)),
                     state: Living::Alive,
                 },
             )});
@@ -148,8 +148,8 @@ fn character_editor(
 
                     // Species related values
                     let mut use_slider: bool = false;
-                    let mut age_of_maturity: u32 = u32::MIN;
-                    let mut max_age: u32 = u32::MAX;
+                    let mut age_of_maturity: TimeLength = TimeLength::from_years(0);
+                    let mut max_age: TimeLength = TimeLength::from_years(1);
 
                     // Species
                     ui.label("Species");
@@ -199,7 +199,7 @@ fn character_editor(
                     ui.label("Age");
                     if use_slider {
                         ui.vertical(|ui| {
-                            ui.add(egui::Slider::new(&mut age.0, u32::MIN..=max_age));
+                            ui.add(egui::Slider::new(&mut age.0, TimeLength::ZERO..=max_age));
                             if age.0 >= age_of_maturity {
                                 ui.label("This person is an adult for their species.");
                             } else {
@@ -207,7 +207,7 @@ fn character_editor(
                             }
                         });
                     } else {
-                        ui.add(egui::DragValue::new(&mut age.0).clamp_range(u32::MIN..=max_age));
+                        ui.add(egui::DragValue::new(&mut age.0).clamp_range(TimeLength::ZERO..=max_age));
                     }
                     ui.end_row();
                 });
