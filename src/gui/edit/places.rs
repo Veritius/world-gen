@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use bevy::{ecs::system::{CommandQueue, Spawn}, prelude::{Or, Entity, With, Parent, Children, QueryState, Without, World, DespawnRecursive}};
 use eframe::{egui, epaint::Color32};
-use crate::{world::{sim::SimulationData, place::{Settlement, Region, RegionBundle, SettlementBundle}, thing::Name}, gui::{EntityStringHashable, ecs::SpawnChild, AppMemory}};
+use crate::{world::{sim::SimulationData, place::{Settlement, Region, RegionBundle, SettlementBundle}, common::Name}, gui::{EntityStringHashable, ecs::SpawnChild, AppMemory}};
 
 use super::helpers::change_owner_button;
 

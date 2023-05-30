@@ -1,7 +1,7 @@
 //! Places in history.
 
 use bevy::ecs::prelude::*;
-use super::thing::Name;
+use super::common::Name;
 
 /// A bundle for creating regions.
 /// Parent regions must be added manually.

@@ -1,7 +1,7 @@
 use std::{collections::{BTreeMap, BTreeSet}, marker::PhantomData};
 use bevy::ecs::{system::{CommandQueue, Spawn, Insert, Remove, Despawn}, query::With, prelude::Entity};
 use eframe::egui;
-use crate::{world::{sim::SimulationData, person::{PersonBundle, Person, Personality}, thing::{Name, Age, Important}, defs::species::{Species, AssociatedSpecies}}, gui::{EntityStringHashable, AppMemory}};
+use crate::{world::{sim::SimulationData, person::{PersonBundle, Person, Personality}, common::{Name, Age, Important}, defs::species::{Species, AssociatedSpecies}, living::Living}, gui::{EntityStringHashable, AppMemory}};
 
 const SEARCH_KEY: &str = "edit_people_search";
 
@@ -19,6 +19,7 @@ pub(super) fn edit_people_ui(
                     personality: Personality::default(),
                     name: Name("John Doe".to_owned()),
                     age: Age(32),
+                    state: Living::Alive,
                 },
             )});
         };
@@ -41,7 +42,7 @@ fn character_editor(
     queue: &mut CommandQueue,
     sim: &mut SimulationData,
 ) {
-    let mut people_query = sim.app.world.query_filtered::<(Entity, &mut Name, Option<&Important>, &mut Age, &mut Personality, Option<&mut AssociatedSpecies>), With<Person>>();
+    let mut people_query = sim.app.world.query_filtered::<(Entity, &mut Name, Option<&Important>, &mut Age, &mut Personality, Option<&mut AssociatedSpecies>, &mut Living), With<Person>>();
     let mut people_set: BTreeSet<Entity> = BTreeSet::new();
 
     for x in people_query.iter(&mut sim.app.world) {
@@ -66,7 +67,7 @@ fn character_editor(
     .auto_shrink([false, false])
     .show(ui, |ui| {
         for entity in people_set.iter() {
-            let (entity, mut name, important, mut age, mut personality, species) = people_query.get_mut(&mut sim.app.world, *entity).unwrap();
+            let (entity, mut name, important, mut age, mut personality, species, mut living) = people_query.get_mut(&mut sim.app.world, *entity).unwrap();
 
             // Filter options by name
             if search_term.is_some() {
@@ -97,6 +98,18 @@ fn character_editor(
                     // Person's name
                     ui.label("Name");
                     ui.text_edit_singleline(&mut name.0);
+                    ui.end_row();
+
+                    // Person's state (like being alive)
+                    ui.label("State");
+                    ui.horizontal(|ui| {
+                        if ui.button(format!("{:?}", *living)).clicked() {
+                            *living = match *living {
+                                Living::Alive => Living::Dead,
+                                Living::Dead => Living::Alive,
+                            }
+                        }
+                    });
                     ui.end_row();
 
                     // Is important

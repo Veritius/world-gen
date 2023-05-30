@@ -1,5 +1,5 @@
 use bevy::ecs::prelude::*;
-use crate::world::thing::Name;
+use crate::world::common::Name;
 
 #[derive(Bundle)]
 pub struct SpeciesBundle {
