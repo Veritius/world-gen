@@ -1,5 +1,7 @@
 //! In-simulation time.
 
+use std::fmt::Display;
+
 use eframe::emath::Numeric;
 
 /// Tracks time in days.
@@ -8,6 +10,16 @@ pub struct TimeLength(u32);
 
 impl TimeLength {
     pub const ZERO: TimeLength = TimeLength(0);
+
+    /// Returns a tuple of (days, months, years)
+    pub fn am_tuple(&self) -> (u32, u32, u32) {
+        let val = self.days_passed();
+        let years = val / 360;
+        let months = (val % 360) / 30;
+        let days = val % 360 % 30;
+
+        (days, months, years)
+    }
 
     /// Returns how many years have passed.
     pub fn years_passed(&self) -> u32 {
@@ -62,5 +74,17 @@ impl Numeric for TimeLength {
 
     fn from_f64(num: f64) -> Self {
         Self::from_days(num as u32)
+    }
+}
+
+impl Display for TimeLength {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (days, months, years) = self.am_tuple();
+
+        if years != 0 { f.write_str(&format!("{years} years ")).unwrap(); }
+        if months != 0 { f.write_str(&format!("{months} months ")).unwrap(); }
+        f.write_str(&format!("{days} days")).unwrap();
+        
+        Ok(())
     }
 }

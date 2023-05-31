@@ -3,6 +3,8 @@ use bevy::ecs::{system::{CommandQueue, Spawn, Insert, Remove, Despawn}, query::W
 use eframe::egui;
 use crate::{world::{sim::SimulationData, person::{PersonBundle, Person, Personality}, common::{Name, Age, Important}, defs::species::{Species, AssociatedSpecies}, living::Living, time::TimeLength}, gui::{EntityStringHashable, AppMemory}};
 
+use super::widgets::time_length_drag_value;
+
 const SEARCH_KEY: &str = "edit_people_search";
 
 pub(super) fn edit_people_ui(
@@ -207,7 +209,7 @@ fn character_editor(
                             }
                         });
                     } else {
-                        ui.add(egui::DragValue::new(&mut age.0).clamp_range(TimeLength::ZERO..=max_age));
+                        ui.add(time_length_drag_value(&mut age.0).clamp_range(TimeLength::ZERO..=max_age));
                     }
                     ui.end_row();
                 });

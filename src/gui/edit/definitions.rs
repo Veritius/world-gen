@@ -2,6 +2,8 @@ use bevy::ecs::{system::{CommandQueue, Spawn, Despawn}, prelude::Entity, world::
 use eframe::egui;
 use crate::{world::{sim::SimulationData, defs::species::{SpeciesBundle, Species}, common::Name, time::TimeLength}, gui::{EntityStringHashable, AppMemory}};
 
+use super::widgets::time_length_drag_value;
+
 const SUBTAB_KEY: &str = "edit_definitions_tab";
 
 const SOFT_MAX_AGE: TimeLength = TimeLength::from_years(10_000);
@@ -123,7 +125,7 @@ fn species_editor(
             // Max age
             ui.label("Max age");
             let range = if species.humanoid { MIN_HUMANOID_AGE..=SOFT_MAX_AGE } else { TimeLength::ZERO..=SOFT_MAX_AGE };
-            ui.add(egui::DragValue::new(&mut species.max_age).clamp_range(range));
+            ui.add(time_length_drag_value(&mut species.max_age).clamp_range(range));
             ui.end_row();
 
             let max_age = species.max_age.clone();

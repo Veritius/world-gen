@@ -1,3 +1,5 @@
+pub mod widgets;
+
 mod meta;
 mod people;
 mod definitions;
