@@ -23,12 +23,12 @@ pub struct Personality {
 }
 
 impl Personality {
-    /// A tuple of mutable references to all the fields in this struct.
-    pub fn split_borrow(&mut self) -> (&mut f32, &mut f32) {
-        (
-            &mut self.selflessness,
-            &mut self.aggression
-        )
+    /// Returns a struct that allows mutable access to multiple personality values at once.
+    pub fn multiple_borrow(&mut self) -> PersonalityMutRef {
+        PersonalityMutRef {
+            selflessness: &mut self.selflessness,
+            aggression: &mut self.aggression,
+        }
     }
 }
 
@@ -41,4 +41,10 @@ impl Default for Personality {
             aggression: MIDPOINT,
         }
     }
+}
+
+/// Mutable references to all personality values.
+pub struct PersonalityMutRef<'a> {
+    pub selflessness: &'a mut f32,
+    pub aggression: &'a mut f32,
 }

@@ -128,16 +128,15 @@ fn character_editor(
                     // Personality
                     ui.label("Personality");
                     ui.vertical(|ui| {
-                        // Split borrow, because borrow checker
-                        let split = personality.split_borrow();
+                        let personality = personality.multiple_borrow();
 
                         // Sliders for personality values
                         egui::Grid::new(EntityStringHashable(entity, "personality_items".to_string()))
                         .show(ui, |ui| {
-                            // prevent code repetition with iteration
+                            // Prevent code repetition with iteration
                             for (value, left_text, right_text) in [
-                                (split.0, "Selfishness", "Selflessness"),
-                                (split.1, "Timidity", "Aggression"),
+                                (personality.selflessness, "Selfishness", "Selflessness"),
+                                (personality.aggression, "Timidity", "Aggression"),
                             ] {
                                 ui.label(left_text);
                                 ui.add(egui::Slider::new(value, 0.0..=1.0).show_value(false));
