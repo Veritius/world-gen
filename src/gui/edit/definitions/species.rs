@@ -110,12 +110,20 @@ fn species_editor(
 
             // How much this species can endure before death
             ui.label("Resilience");
-            ui.add(egui::Slider::new(&mut species.resilience, 1.0..=100000.0).logarithmic(true));
+            ui.add(egui::Slider::new(&mut species.resilience, 1.0..=100000.0).logarithmic(true).step_by(1.0));
             ui.end_row();
 
             // How slowly afflictions progress for this species
             ui.label("Immunity");
-            ui.add(egui::Slider::new(&mut species.immunity, 0.001..=5.0));
+            let text = match species.immunity {
+                x if x <= 0.1 => "Super-immune",
+                x if x < 0.8 => "Enhanced immunity",
+                x if x < 1.2 => "About average",
+                x if x < 2.0 => "Vulnerable",
+                x if x >= 2.0 => "Extremely vulnerable",
+                _ => "",
+            };
+            ui.add(egui::Slider::new(&mut species.immunity, 0.001..=3.0).text(text));
             ui.end_row();
         });
     });
