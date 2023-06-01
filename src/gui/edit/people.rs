@@ -1,7 +1,7 @@
 use std::{collections::{BTreeMap, BTreeSet}, marker::PhantomData};
 use bevy::ecs::{system::{CommandQueue, Spawn, Insert, Remove, Despawn}, query::With, prelude::Entity};
 use eframe::egui;
-use crate::{world::{sim::SimulationData, person::{PersonBundle, Person, Personality}, common::{Name, Age, Important}, defs::species::{Species, AssociatedSpecies}, living::Living, time::TimeLength}, gui::{EntityStringHashable, AppMemory}};
+use crate::{world::{sim::SimulationData, person::{PersonBundle, Person, Personality}, common::{Name, Important}, defs::species::{Species, AssociatedSpecies}, living::Living, time::Age}, gui::{EntityStringHashable, AppMemory}};
 
 use super::widgets::{time_length_drag_value, time_length_slider};
 
@@ -20,7 +20,7 @@ pub(super) fn edit_people_ui(
                     person: Person,
                     personality: Personality::default(),
                     name: Name("John Doe".to_owned()),
-                    age: Age(TimeLength::from_years(32)),
+                    age: Age::from_years(32),
                     state: Living::Alive,
                 },
             )});
@@ -150,8 +150,8 @@ fn character_editor(
 
                     // Species related values
                     let mut use_slider: bool = false;
-                    let mut age_of_maturity: TimeLength = TimeLength::from_years(0);
-                    let mut max_age: TimeLength = TimeLength::from_years(100_000);
+                    let mut age_of_maturity: Age = Age::from_years(0);
+                    let mut max_age: Age = Age::from_years(100_000);
 
                     // Species
                     ui.label("Species");
@@ -195,21 +195,21 @@ fn character_editor(
                     ui.end_row();
 
                     // Adjust age as per species
-                    age.0 = age.0.min(max_age);
+                    *age = age.min(max_age);
 
                     // Age
                     ui.label("Age");
                     if use_slider {
                         ui.vertical(|ui| {
-                            ui.add(time_length_slider(&mut age.0, TimeLength::ZERO..=max_age));
-                            if age.0 >= age_of_maturity {
+                            ui.add(time_length_slider(&mut age, Age::ZERO..=max_age));
+                            if *age >= age_of_maturity {
                                 ui.label("This person is an adult for their species.");
                             } else {
                                 ui.label("This person is a child for their species.");
                             }
                         });
                     } else {
-                        ui.add(time_length_drag_value(&mut age.0).clamp_range(TimeLength::ZERO..=max_age));
+                        ui.add(time_length_drag_value(&mut age).clamp_range(Age::ZERO..=max_age));
                     }
                     ui.end_row();
                 });

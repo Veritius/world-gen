@@ -1,15 +1,15 @@
 use bevy::ecs::{system::{CommandQueue, Spawn, Despawn}, prelude::Entity, world::Mut};
 use eframe::egui;
-use crate::{world::{sim::SimulationData, defs::species::{SpeciesBundle, Species}, common::Name, time::TimeLength}, gui::{EntityStringHashable, AppMemory}};
+use crate::{world::{sim::SimulationData, defs::species::{SpeciesBundle, Species}, common::Name, time::Age}, gui::{EntityStringHashable, AppMemory}};
 
 use super::widgets::{time_length_drag_value, time_length_slider};
 
 const SUBTAB_KEY: &str = "edit_definitions_tab";
 
-const SOFT_MAX_AGE: TimeLength = TimeLength::from_years(10_000);
+const SOFT_MAX_AGE: Age = Age::from_years(10_000);
 // This is the age at which a humanoid is considered an 'adult', and therefore can reproduce.
 // DO NOT set this lower. No excuses.
-const MIN_HUMANOID_AGE: TimeLength = TimeLength::from_years(18);
+const MIN_HUMANOID_AGE: Age = Age::from_years(18);
 
 pub(super) fn edit_definitions_ui(
     ui: &mut egui::Ui,
@@ -52,8 +52,8 @@ fn species_menu(
                     name: Name("New creature".to_owned()),
                     species: Species {
                         humanoid: false,
-                        maturity_age: TimeLength::from_years(3),
-                        max_age: TimeLength::from_years(12),
+                        maturity_age: Age::from_years(3),
+                        max_age: Age::from_years(12),
                     },
                 }
             )});
@@ -67,7 +67,7 @@ fn species_menu(
                     species: Species {
                         humanoid: true,
                         maturity_age: MIN_HUMANOID_AGE,
-                        max_age: TimeLength::from_years(100),
+                        max_age: Age::from_years(100),
                     },
                 }
             )});
@@ -124,7 +124,7 @@ fn species_editor(
 
             // Max age
             ui.label("Max age");
-            let range = if species.humanoid { MIN_HUMANOID_AGE..=SOFT_MAX_AGE } else { TimeLength::ZERO..=SOFT_MAX_AGE };
+            let range = if species.humanoid { MIN_HUMANOID_AGE..=SOFT_MAX_AGE } else { Age::ZERO..=SOFT_MAX_AGE };
             ui.add(time_length_drag_value(&mut species.max_age).clamp_range(range));
             ui.end_row();
 
@@ -132,7 +132,7 @@ fn species_editor(
 
             // Age of maturity
             ui.label("Age of maturity");
-            let range = if species.humanoid { MIN_HUMANOID_AGE..=max_age } else { TimeLength::ZERO..=max_age };
+            let range = if species.humanoid { MIN_HUMANOID_AGE..=max_age } else { Age::ZERO..=max_age };
             ui.add(time_length_slider(&mut species.maturity_age, range));
             ui.end_row();
         });

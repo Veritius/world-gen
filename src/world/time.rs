@@ -1,15 +1,15 @@
 //! In-simulation time.
 
 use std::{fmt::Display, str::FromStr};
-
+use bevy::prelude::Component;
 use eframe::emath::Numeric;
 
 /// Tracks time in days.
-#[derive(Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct TimeLength(u32);
+#[derive(Component, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Age(u32);
 
-impl TimeLength {
-    pub const ZERO: TimeLength = TimeLength(0);
+impl Age {
+    pub const ZERO: Age = Age(0);
 
     /// Returns a tuple of (days, months, years)
     pub fn am_tuple(&self) -> (u32, u32, u32) {
@@ -27,7 +27,7 @@ impl TimeLength {
     }
 
     pub const fn from_years(years: u32) -> Self {
-        TimeLength(years * 360)
+        Age(years * 360)
     }
 
     /// Returns how many months have passed.
@@ -36,7 +36,7 @@ impl TimeLength {
     }
 
     pub const fn from_months(months: u32) -> Self {
-        TimeLength(months * 30)
+        Age(months * 30)
     }
 
     /// Returns how many days have passed.
@@ -45,7 +45,7 @@ impl TimeLength {
     }
 
     pub const fn from_days(days: u32) -> Self {
-        TimeLength(days)
+        Age(days)
     }
 
     pub fn add_years(&mut self, amount: u32) {
@@ -61,12 +61,12 @@ impl TimeLength {
     }
 }
 
-impl Numeric for TimeLength {
+impl Numeric for Age {
     const INTEGRAL: bool = true;
 
-    const MIN: Self = TimeLength::ZERO;
+    const MIN: Self = Age::ZERO;
 
-    const MAX: Self = TimeLength(u32::MAX);
+    const MAX: Self = Age(u32::MAX);
 
     fn to_f64(self) -> f64 {
         self.0.to_f64()
@@ -77,7 +77,7 @@ impl Numeric for TimeLength {
     }
 }
 
-impl Display for TimeLength {
+impl Display for Age {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let (days, months, years) = self.am_tuple();
 
@@ -89,11 +89,11 @@ impl Display for TimeLength {
     }
 }
 
-impl FromStr for TimeLength {
+impl FromStr for Age {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut time = TimeLength::ZERO;
+        let mut time = Age::ZERO;
 
         let split: Vec<&str> = s.split(' ').collect();
         for chunk in split.chunks(2) {

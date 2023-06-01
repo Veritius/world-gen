@@ -1,7 +1,7 @@
 //! A person in history.
 
 use bevy::ecs::prelude::*;
-use super::{common::{Name, Age}, living::Living};
+use super::{common::Name, living::Living, time::Age};
 
 #[derive(Bundle)]
 pub struct PersonBundle {

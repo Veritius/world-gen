@@ -1,5 +1,5 @@
 use bevy::ecs::prelude::*;
-use crate::world::{common::Name, time::TimeLength};
+use crate::world::{common::Name, time::Age};
 
 #[derive(Bundle)]
 pub struct SpeciesBundle {
@@ -12,9 +12,9 @@ pub struct Species {
     /// Is this species humanoid?
     pub humanoid: bool,
     /// The age at which this creature is considered fully formed or matured.
-    pub maturity_age: TimeLength,
+    pub maturity_age: Age,
     /// The maximum age at which this creature will die. Approaching this age will increase harm to the creature.
-    pub max_age: TimeLength,
+    pub max_age: Age,
 }
 
 #[derive(Component, Clone, PartialEq, Eq)]
