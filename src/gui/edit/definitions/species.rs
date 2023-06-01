@@ -110,7 +110,7 @@ fn species_editor(
 
             // How much this species can endure before death
             ui.label("Resilience");
-            ui.add(egui::Slider::new(&mut species.resilience, 1.0..=500.0));
+            ui.add(egui::Slider::new(&mut species.resilience, 1.0..=100000.0).logarithmic(true));
             ui.end_row();
 
             // How slowly afflictions progress for this species
