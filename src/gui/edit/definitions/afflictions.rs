@@ -65,7 +65,7 @@ fn affliction_editor(
             ui.end_row();
 
             ui.label("Coefficient");
-            health_adjustment_function_selector(ui, "affliction_editor_coefficient", entity, &mut affliction.coefficient, 0.0);
+            health_adjustment_function_selector(ui, "affliction_editor_coefficient", entity, &mut affliction.coefficient, 1.0);
             ui.end_row();
         });
     });
@@ -80,6 +80,7 @@ fn health_adjustment_function_selector(
 ) {
     let selected_text = match value {
         HealthAdjustmentFunction::NoAdjustment => "No adjustment",
+        HealthAdjustmentFunction::Scaling(_) => "Scaling value",
         HealthAdjustmentFunction::Static(_) => "Static value",
         HealthAdjustmentFunction::Custom(_) => "Function",
     };
@@ -88,17 +89,21 @@ fn health_adjustment_function_selector(
         egui::ComboBox::new(EntityStringHashable::new(entity, ukey), "")
         .selected_text(selected_text)
         .show_ui(ui, |ui| {
-            if ui.button("No adjustment").clicked() {
-                *value = HealthAdjustmentFunction::NoAdjustment;
+            for (text, new) in [
+                ("No adjustment", HealthAdjustmentFunction::NoAdjustment),
+                ("Scaling value", HealthAdjustmentFunction::Scaling(static_default)),
+                ("Static value", HealthAdjustmentFunction::Scaling(static_default)),
+                // Custom is intentionally not added here, as it can't be edited in the UI
+            ] {
+                if ui.button(text).clicked() {
+                    *value = new;
+                }
             }
-            if ui.button("Static value").clicked() {
-                *value = HealthAdjustmentFunction::Static(static_default);
-            }
-            // Custom is intentionally not added here, as it can't be edited in the UI
         });
 
         match value {
             HealthAdjustmentFunction::NoAdjustment => ui.label(egui::RichText::new("Nothing to adjust.").italics()),
+            HealthAdjustmentFunction::Scaling(value) => ui.add(egui::DragValue::new(value).speed(0.1)),
             HealthAdjustmentFunction::Static(value) => ui.add(egui::DragValue::new(value).speed(0.1)),
             HealthAdjustmentFunction::Custom(_) => ui.label(egui::RichText::new("Can't edit functions.").italics()),
         }

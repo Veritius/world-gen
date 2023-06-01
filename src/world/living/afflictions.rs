@@ -8,7 +8,9 @@ use crate::world::common::Name;
 pub enum HealthAdjustmentFunction {
     /// Equal to `Static(0.0)` as a flat rate and `Static(1.0)` as a coefficient.
     NoAdjustment,
-    /// Multiplied by the severity of the illness.
+    /// Multiplied by severity to get amount.
+    Scaling(f32),
+    /// Always remains this value and ignores severity.
     Static(f32),
     /// A Rust function that accepts severity and outputs the new value.
     Custom(Box<dyn HealthAdjustFn>),
