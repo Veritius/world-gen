@@ -1,6 +1,6 @@
 //! In-simulation time.
 
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
 use eframe::emath::Numeric;
 
@@ -86,5 +86,33 @@ impl Display for TimeLength {
         f.write_str(&format!("{days} days")).unwrap();
         
         Ok(())
+    }
+}
+
+impl FromStr for TimeLength {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut time = TimeLength::ZERO;
+
+        let split: Vec<&str> = s.split(' ').collect();
+        for chunk in split.chunks(2) {
+            if chunk.len() != 2 { return Err(()); }
+
+            let num = u32::from_str(chunk[0]);
+            if num.is_err() { return Err(()); }
+            let num = num.unwrap();
+
+            let val = chunk[1];
+
+            match val {
+                "years" | "year" | "y" => { time.add_years(num); },
+                "months" | "month" | "m" => { time.add_months(num); },
+                "days" | "day" | "d" => { time.add_days(num); }
+                _ => { return Err(()); }
+            }
+        }
+
+        Ok(time)
     }
 }
