@@ -20,8 +20,12 @@ pub enum Living {
 pub struct Health(f32);
 
 impl Health {
+    pub const fn new() -> Self {
+        Self(f32::INFINITY)
+    }
+
     #[allow(dead_code)]
-    fn read(&self) -> f32 {
+    pub const fn read(&self) -> f32 {
         self.0
     }
 }

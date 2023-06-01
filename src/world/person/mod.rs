@@ -1,7 +1,7 @@
 //! A person in history.
 
 use bevy::ecs::prelude::*;
-use super::{common::Name, living::Living, time::Age};
+use super::{common::Name, living::{Living, Health}, time::Age};
 
 #[derive(Bundle)]
 pub struct PersonBundle {
@@ -10,6 +10,7 @@ pub struct PersonBundle {
     pub name: Name,
     pub age: Age,
     pub state: Living,
+    pub health: Health,
 }
 
 /// A marker component for a person in the world.

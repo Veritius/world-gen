@@ -1,7 +1,7 @@
 use std::{collections::{BTreeMap, BTreeSet}, marker::PhantomData};
 use bevy::ecs::{system::{CommandQueue, Spawn, Insert, Remove, Despawn}, query::With, prelude::Entity};
 use eframe::egui;
-use crate::{world::{sim::SimulationData, person::{PersonBundle, Person, Personality}, common::{Name, Important}, defs::species::{Species, AssociatedSpecies}, living::Living, time::Age}, gui::{EntityStringHashable, AppMemory}};
+use crate::{world::{sim::SimulationData, person::{PersonBundle, Person, Personality}, common::{Name, Important}, defs::species::{Species, AssociatedSpecies}, living::{Living, Health}, time::Age}, gui::{EntityStringHashable, AppMemory}};
 
 use super::widgets::{time_length_drag_value, time_length_slider};
 
@@ -22,6 +22,7 @@ pub(super) fn edit_people_ui(
                     name: Name("John Doe".to_owned()),
                     age: Age::from_years(32),
                     state: Living::Alive,
+                    health: Health::new(),
                 },
             )});
         };
