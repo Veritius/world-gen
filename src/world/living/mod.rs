@@ -39,7 +39,7 @@ pub(super) fn health_caching_system(
     for (mut health, species, afflicted) in entities_query.iter_mut() {
         let mut adjust: f32 = 0.0;
 
-        let mut coefficients: Vec<f32> = vec![];
+        let mut coefficient: f32 = 1.0;
 
         if let Some(afflicted) = afflicted {
             for (id, severity) in afflicted.iter() {
@@ -49,14 +49,12 @@ pub(super) fn health_caching_system(
 
                 // Apply flat effects first
                 adjust += affliction.flat.effect(false, *severity);
-                coefficients.push(affliction.coefficient.effect(true, *severity));
+                coefficient *= affliction.coefficient.effect(true, *severity);
             }
         }
 
         // Apply coefficients
-        for coefficient in coefficients {
-            adjust *= coefficient;
-        }
+        adjust *= coefficient;
 
         if let Some(species) = species {
             let q = species_query.get(species.0);
