@@ -17,6 +17,8 @@ pub struct Species {
     pub max_age: Age,
     /// The maximum health an entity of this species has.
     pub resilience: f32,
+    /// Modifier for the progression of affliction severity.
+    pub immunity: f32,
 }
 
 #[derive(Component, Clone, PartialEq, Eq)]

@@ -23,6 +23,7 @@ pub(super) fn species_menu(
                         maturity_age: Age::from_years(3),
                         max_age: Age::from_years(12),
                         resilience: 15.0,
+                        immunity: 1.0,
                     },
                 }
             )});
@@ -38,6 +39,7 @@ pub(super) fn species_menu(
                         maturity_age: MIN_HUMANOID_AGE,
                         max_age: Age::from_years(100),
                         resilience: 100.0,
+                        immunity: 1.0,
                     },
                 }
             )});
@@ -104,6 +106,16 @@ fn species_editor(
             ui.label("Age of maturity");
             let range = if species.humanoid { MIN_HUMANOID_AGE..=max_age } else { Age::ZERO..=max_age };
             ui.add(time_length_slider(&mut species.maturity_age, range));
+            ui.end_row();
+
+            // How much this species can endure before death
+            ui.label("Resilience");
+            ui.add(egui::Slider::new(&mut species.resilience, 1.0..=500.0));
+            ui.end_row();
+
+            // How slowly afflictions progress for this species
+            ui.label("Immunity");
+            ui.add(egui::Slider::new(&mut species.immunity, 0.001..=5.0));
             ui.end_row();
         });
     });
