@@ -22,6 +22,7 @@ pub(super) fn species_menu(
                         humanoid: false,
                         maturity_age: Age::from_years(3),
                         max_age: Age::from_years(12),
+                        resilience: 15.0,
                     },
                 }
             )});
@@ -36,6 +37,7 @@ pub(super) fn species_menu(
                         humanoid: true,
                         maturity_age: MIN_HUMANOID_AGE,
                         max_age: Age::from_years(100),
+                        resilience: 100.0,
                     },
                 }
             )});

@@ -91,8 +91,8 @@ fn health_adjustment_function_selector(
         .show_ui(ui, |ui| {
             for (text, new) in [
                 ("No adjustment", HealthAdjustmentFunction::NoAdjustment),
+                ("Static value", HealthAdjustmentFunction::Static(static_default)),
                 ("Scaling value", HealthAdjustmentFunction::Scaling(static_default)),
-                ("Static value", HealthAdjustmentFunction::Scaling(static_default)),
                 // Custom is intentionally not added here, as it can't be edited in the UI
             ] {
                 if ui.button(text).clicked() {
