@@ -3,7 +3,7 @@ use bevy::ecs::{system::{CommandQueue, Spawn, Insert, Remove, Despawn}, query::W
 use eframe::egui;
 use crate::{world::{sim::SimulationData, person::{PersonBundle, Person, Personality}, common::{Name, Age, Important}, defs::species::{Species, AssociatedSpecies}, living::Living, time::TimeLength}, gui::{EntityStringHashable, AppMemory}};
 
-use super::widgets::time_length_drag_value;
+use super::widgets::{time_length_drag_value, time_length_slider};
 
 const SEARCH_KEY: &str = "edit_people_search";
 
@@ -151,7 +151,7 @@ fn character_editor(
                     // Species related values
                     let mut use_slider: bool = false;
                     let mut age_of_maturity: TimeLength = TimeLength::from_years(0);
-                    let mut max_age: TimeLength = TimeLength::from_years(1);
+                    let mut max_age: TimeLength = TimeLength::from_years(100_000);
 
                     // Species
                     ui.label("Species");
@@ -201,7 +201,7 @@ fn character_editor(
                     ui.label("Age");
                     if use_slider {
                         ui.vertical(|ui| {
-                            ui.add(egui::Slider::new(&mut age.0, TimeLength::ZERO..=max_age));
+                            ui.add(time_length_slider(&mut age.0, TimeLength::ZERO..=max_age));
                             if age.0 >= age_of_maturity {
                                 ui.label("This person is an adult for their species.");
                             } else {

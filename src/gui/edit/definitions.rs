@@ -2,7 +2,7 @@ use bevy::ecs::{system::{CommandQueue, Spawn, Despawn}, prelude::Entity, world::
 use eframe::egui;
 use crate::{world::{sim::SimulationData, defs::species::{SpeciesBundle, Species}, common::Name, time::TimeLength}, gui::{EntityStringHashable, AppMemory}};
 
-use super::widgets::time_length_drag_value;
+use super::widgets::{time_length_drag_value, time_length_slider};
 
 const SUBTAB_KEY: &str = "edit_definitions_tab";
 
@@ -133,7 +133,7 @@ fn species_editor(
             // Age of maturity
             ui.label("Age of maturity");
             let range = if species.humanoid { MIN_HUMANOID_AGE..=max_age } else { TimeLength::ZERO..=max_age };
-            ui.add(egui::Slider::new(&mut species.maturity_age, range));
+            ui.add(time_length_slider(&mut species.maturity_age, range));
             ui.end_row();
         });
     });
