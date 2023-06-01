@@ -2,14 +2,15 @@
 
 use std::{fmt::Debug, collections::BTreeMap};
 use bevy::prelude::{Component, Entity, Bundle};
-
 use crate::world::common::Name;
 
 #[derive(Debug)]
 pub enum HealthAdjustmentFunction {
     /// Equal to `Static(0.0)` as a flat rate and `Static(1.0)` as a coefficient.
     NoAdjustment,
+    /// Multiplied by the severity of the illness.
     Static(f32),
+    /// A Rust function that accepts severity and outputs the new value.
     Custom(Box<dyn HealthAdjustFn>),
 }
 
