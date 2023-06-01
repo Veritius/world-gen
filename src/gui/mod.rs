@@ -148,3 +148,12 @@ fn systems_check(
 #[derive(Hash, PartialEq, Eq, PartialOrd, Ord)]
 /// Used for egui widget IDs to prevent collisions.
 struct EntityStringHashable(pub Entity, pub String);
+
+impl EntityStringHashable {
+    fn new(entity: Entity, string: impl Into<String>) -> Self {
+        Self {
+            0: entity,
+            1: string.into(),
+        }
+    }
+}

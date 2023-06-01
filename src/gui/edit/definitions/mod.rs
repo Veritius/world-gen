@@ -1,8 +1,10 @@
+mod afflictions;
 mod species;
 
 use bevy::ecs::system::CommandQueue;
 use eframe::egui;
 use crate::{world::sim::SimulationData, gui::AppMemory};
+use afflictions::afflictions_menu;
 use species::species_menu;
 
 const SUBTAB_KEY: &str = "edit_definitions_tab";
@@ -13,7 +15,7 @@ pub(super) fn edit_definitions_ui(
     queue: &mut CommandQueue,
     sim: &mut SimulationData,
 ) {
-    if memory.string_map.get(SUBTAB_KEY).is_none() { memory.string_map.insert(SUBTAB_KEY.to_owned(), "Species".to_string()); }
+    if memory.string_map.get(SUBTAB_KEY).is_none() { memory.string_map.insert(SUBTAB_KEY.to_owned(), "".to_string()); }
     let current_tab = memory.string_map.get_mut(SUBTAB_KEY).unwrap();
 
     // Tab change buttons
@@ -22,6 +24,7 @@ pub(super) fn edit_definitions_ui(
     .auto_shrink([false, true])
     .show(ui, |ui| {
         ui.horizontal(|ui| {
+            ui.selectable_value(current_tab, "Afflictions".to_owned(), "Afflictions");
             ui.selectable_value(current_tab, "Species".to_owned(), "Species");
         });
     });
@@ -30,7 +33,8 @@ pub(super) fn edit_definitions_ui(
     
     // Tabs
     match current_tab.as_str() {
+        "Afflictions" => afflictions_menu(ui, queue, sim),
         "Species" => species_menu(ui, queue, sim),
-        _ => todo!("Handle this case"),
+        _ => {},
     }
 }
