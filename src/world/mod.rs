@@ -9,6 +9,7 @@ pub mod place;
 pub mod defs;
 pub mod living;
 pub mod faction;
+pub mod map;
 
 pub mod soft_limits {
     pub const MIN_YEARS_TO_SIMULATE: u32 = 50;
