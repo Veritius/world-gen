@@ -43,7 +43,7 @@ fn affliction_editor(
     .id_source(EntityStringHashable(entity, "affliction_editor_section".to_owned()))
     .show(ui, |ui| {
         ui.horizontal(|ui| {
-            if ui.button("Delete species").clicked() {
+            if ui.button("Delete affliction").clicked() {
                 queue.push(Despawn { entity });
             }
         });
