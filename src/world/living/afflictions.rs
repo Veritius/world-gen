@@ -1,8 +1,8 @@
 //! Values for calculating health.
 
 use std::{fmt::Debug, collections::{BTreeMap, btree_map::Iter}};
-use bevy::prelude::{Component, Entity, Bundle};
-use crate::world::common::Name;
+use bevy::prelude::{Component, Entity, Bundle, Query, Res};
+use crate::world::{common::Name, defs::{SimulationConfig, Timespan}};
 
 /// A value for an affliction that changes depending on severity.
 #[derive(Debug)]
@@ -48,7 +48,7 @@ pub struct Affliction {
     /// Applied to the flat rate modifier after they're summed up.
     pub coefficient: SeverityVariableValue,
     /// Defines the speed of progression for this disease.
-    /// This 
+    /// This is applied every tick to values in [Afflicted] based on days. If the sim timespan is months, it's multiplied by 30.
     pub progression_speed: SeverityVariableValue,
 }
 
@@ -74,5 +74,25 @@ pub struct Afflicted(BTreeMap<Entity, f32>);
 impl Afflicted {
     pub fn iter(&self) -> Iter<Entity, f32> {
         self.0.iter()
+    }
+}
+
+pub(in super::super) fn affliction_progress_system(
+    config: Res<SimulationConfig>,
+    afflictions: Query<&Affliction>,
+    mut afflicted: Query<&mut Afflicted>,
+) {
+    for mut afflicted in afflicted.iter_mut() {
+        for (k, v) in afflicted.0.iter_mut() {
+            if let Ok(affliction) = afflictions.get(*k) {
+                // Calculate affliction change
+                let mut adjust = affliction.progression_speed.effect(false, *v);
+                if adjust == 0.0 { continue; }
+                if config.timespan == Timespan::Months { adjust *= 30.0; }
+
+                // Apply change
+                *v += adjust;
+            }
+        }
     }
 }
