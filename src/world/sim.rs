@@ -232,7 +232,7 @@ pub enum SimulationError {
     NotFrozen,
 }
 
-pub struct SimulationData{
+pub struct SimulationData {
     pub app: App
 }
 
