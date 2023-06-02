@@ -1,6 +1,6 @@
 use bevy::{ecs::system::{CommandQueue, SystemState, Spawn, Despawn}, prelude::{Query, Entity, Mut}};
 use eframe::egui;
-use crate::{world::{sim::SimulationData, living::afflictions::{Affliction, AfflictionBundle, HealthAdjustmentFunction}, common::Name}, gui::EntityStringHashable};
+use crate::{world::{sim::SimulationData, living::afflictions::{Affliction, AfflictionBundle, SeverityVariableValue}, common::Name}, gui::EntityStringHashable};
 
 pub(super) fn afflictions_menu(
     ui: &mut egui::Ui,
@@ -61,28 +61,32 @@ fn affliction_editor(
             ui.end_row();
 
             ui.label("Flat change");
-            health_adjustment_function_selector(ui, "affliction_editor_flat_rate", entity, &mut affliction.flat, 0.0);
+            severity_variable_value_editor(ui, "affliction_editor_flat_rate", entity, &mut affliction.flat, 0.0);
             ui.end_row();
 
             ui.label("Coefficient");
-            health_adjustment_function_selector(ui, "affliction_editor_coefficient", entity, &mut affliction.coefficient, 1.0);
+            severity_variable_value_editor(ui, "affliction_editor_coefficient", entity, &mut affliction.coefficient, 1.0);
+            ui.end_row();
+
+            ui.label("Progression speed");
+            severity_variable_value_editor(ui, "affliction_editor_progression", entity, &mut affliction.progression_speed, 1.0);
             ui.end_row();
         });
     });
 }
 
-fn health_adjustment_function_selector(
+fn severity_variable_value_editor(
     ui: &mut egui::Ui,
     ukey: impl Into<String>,
     entity: Entity,
-    value: &mut HealthAdjustmentFunction,
+    value: &mut SeverityVariableValue,
     static_default: f32,
 ) {
     let selected_text = match value {
-        HealthAdjustmentFunction::NoAdjustment => "No adjustment",
-        HealthAdjustmentFunction::Scaling(_) => "Scaling value",
-        HealthAdjustmentFunction::Static(_) => "Static value",
-        HealthAdjustmentFunction::Custom(_) => "Function",
+        SeverityVariableValue::NoAdjustment => "No adjustment",
+        SeverityVariableValue::Scaling(_) => "Scaling value",
+        SeverityVariableValue::Static(_) => "Static value",
+        SeverityVariableValue::Custom(_) => "Function",
     };
 
     ui.horizontal(|ui| {
@@ -90,9 +94,9 @@ fn health_adjustment_function_selector(
         .selected_text(selected_text)
         .show_ui(ui, |ui| {
             for (text, new) in [
-                ("No adjustment", HealthAdjustmentFunction::NoAdjustment),
-                ("Static value", HealthAdjustmentFunction::Static(static_default)),
-                ("Scaling value", HealthAdjustmentFunction::Scaling(static_default)),
+                ("No adjustment", SeverityVariableValue::NoAdjustment),
+                ("Static value", SeverityVariableValue::Static(static_default)),
+                ("Scaling value", SeverityVariableValue::Scaling(static_default)),
                 // Custom is intentionally not added here, as it can't be edited in the UI
             ] {
                 if ui.button(text).clicked() {
@@ -102,10 +106,10 @@ fn health_adjustment_function_selector(
         });
 
         match value {
-            HealthAdjustmentFunction::NoAdjustment => ui.label(egui::RichText::new("Nothing to adjust.").italics()),
-            HealthAdjustmentFunction::Scaling(value) => ui.add(egui::DragValue::new(value).speed(0.1)),
-            HealthAdjustmentFunction::Static(value) => ui.add(egui::DragValue::new(value).speed(0.1)),
-            HealthAdjustmentFunction::Custom(_) => ui.label(egui::RichText::new("Can't edit functions.").italics()),
+            SeverityVariableValue::NoAdjustment => ui.label(egui::RichText::new("Nothing to adjust.").italics()),
+            SeverityVariableValue::Scaling(value) => ui.add(egui::DragValue::new(value).speed(0.1)),
+            SeverityVariableValue::Static(value) => ui.add(egui::DragValue::new(value).speed(0.1)),
+            SeverityVariableValue::Custom(_) => ui.label(egui::RichText::new("Can't edit functions.").italics()),
         }
     });
 }
