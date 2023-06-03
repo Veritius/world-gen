@@ -1,11 +1,14 @@
 mod afflictions;
 mod species;
+mod tile;
 
 use bevy::ecs::system::CommandQueue;
 use eframe::egui;
 use crate::{world::sim::SimulationData, gui::AppMemory};
 use afflictions::afflictions_menu;
 use species::species_menu;
+
+use self::tile::tiles_menu;
 
 const SUBTAB_KEY: &str = "edit_definitions_tab";
 
@@ -26,6 +29,7 @@ pub(super) fn edit_definitions_ui(
         ui.horizontal(|ui| {
             ui.selectable_value(current_tab, "Afflictions".to_owned(), "Afflictions");
             ui.selectable_value(current_tab, "Species".to_owned(), "Species");
+            ui.selectable_value(current_tab, "Tiles".to_owned(), "Map tiles");
         });
     });
     
@@ -35,6 +39,7 @@ pub(super) fn edit_definitions_ui(
     match current_tab.as_str() {
         "Afflictions" => afflictions_menu(ui, queue, sim),
         "Species" => species_menu(ui, queue, sim),
+        "Tiles" => tiles_menu(ui, queue, sim),
         _ => {},
     }
 }

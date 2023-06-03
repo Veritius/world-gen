@@ -10,6 +10,12 @@ pub struct Important;
 #[derive(Component, Clone)]
 pub struct Name(pub String);
 
+impl<T: Into<String>> From<T> for Name {
+    fn from(value: T) -> Self {
+        Name(value.into())
+    }
+}
+
 /// Increments the age value each tick.
 pub(super) fn age_incrementor_system(
     config: Res<SimulationConfig>,

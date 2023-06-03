@@ -3,6 +3,8 @@
 //! The map is a even-offset flat-top hexagonal grid based on https://www.redblobgames.com/grids/hexagons/
 
 pub mod coordinates;
+pub mod generation;
+pub mod tile;
 
 pub use coordinates::*;
 
