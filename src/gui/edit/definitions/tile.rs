@@ -117,4 +117,14 @@ fn default_tiles(queue: &mut CommandQueue) {
             },
         }
     });
+    queue.push(Spawn {
+        bundle: MapTileDefBundle {
+            name: "Water".into(),
+            def: MapTileDefinition {
+                terrain_kind: TerrainKind::Water,
+                movement_difficulty: 0.1,
+                soil_fertility: 0.0,
+            },
+        }
+    });
 }
