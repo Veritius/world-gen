@@ -1,6 +1,13 @@
 use bevy::prelude::*;
 use crate::world::common::Name;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum TerrainKind {
+    Mountain,
+    Normal,
+    Water,
+}
+
 #[derive(Bundle)]
 pub struct MapTileDefBundle {
     pub name: Name,
@@ -9,10 +16,7 @@ pub struct MapTileDefBundle {
 
 #[derive(Component)]
 pub struct MapTileDefinition {
-    pub generation_weight: f32,
-
-    pub accessed_by_land: bool,
-    pub accessed_by_water: bool,
+    pub terrain_kind: TerrainKind,
 
     pub movement_difficulty: f32,
     pub soil_fertility: f32,
@@ -21,10 +25,7 @@ pub struct MapTileDefinition {
 impl Default for MapTileDefinition {
     fn default() -> Self {
         Self {
-            generation_weight: 1.0,
-
-            accessed_by_land: true,
-            accessed_by_water: false,
+            terrain_kind: TerrainKind::Normal,
             
             movement_difficulty: 0.3,
             soil_fertility: 0.9,

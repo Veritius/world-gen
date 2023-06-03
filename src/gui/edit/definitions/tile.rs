@@ -1,6 +1,6 @@
 use bevy::{prelude::*, ecs::system::{CommandQueue, Spawn, SystemState, Despawn}};
 use eframe::egui;
-use crate::{world::{sim::SimulationData, map::tile::{MapTileDefBundle, MapTileDefinition}, common::Name}, gui::EntityStringHashable};
+use crate::{world::{sim::SimulationData, map::tile::{MapTileDefBundle, MapTileDefinition, TerrainKind}, common::Name}, gui::EntityStringHashable};
 
 pub(super) fn tiles_menu(
     ui: &mut egui::Ui,
@@ -65,16 +65,13 @@ fn tile_editor(
             ui.add_sized([200.0, 18.0], |ui: &mut egui::Ui| { ui.text_edit_singleline(&mut name.0) });
             ui.end_row();
 
-            ui.label("Random weight");
-            ui.horizontal(|ui| {
-                ui.add(egui::Slider::new(&mut tile.generation_weight, 0.01..=100.0).logarithmic(true).fixed_decimals(2));
-            });
-            ui.end_row();
-
-            ui.label("Accessible by ");
-            ui.horizontal(|ui| {
-                ui.checkbox(&mut tile.accessed_by_land, "Land");
-                ui.checkbox(&mut tile.accessed_by_water, "Water");
+            ui.label("Terrain type");
+            egui::ComboBox::new(EntityStringHashable::new(entity, "tile_editor_terrain_kind"), "")
+            .selected_text(format!("{:?}", tile.terrain_kind))
+            .show_ui(ui, |ui| {
+                ui.selectable_value(&mut tile.terrain_kind, TerrainKind::Normal, "Normal");
+                ui.selectable_value(&mut tile.terrain_kind, TerrainKind::Mountain, "Mountain");
+                ui.selectable_value(&mut tile.terrain_kind, TerrainKind::Water, "Water");
             });
             ui.end_row();
 
@@ -92,11 +89,19 @@ fn tile_editor(
 fn default_tiles(queue: &mut CommandQueue) {
     queue.push(Spawn {
         bundle: MapTileDefBundle {
+            name: "Desert".into(),
+            def: MapTileDefinition {
+                terrain_kind: TerrainKind::Normal,
+                movement_difficulty: 0.6,
+                soil_fertility: 0.2,
+            },
+        }
+    });
+    queue.push(Spawn {
+        bundle: MapTileDefBundle {
             name: "Forest".into(),
             def: MapTileDefinition {
-                generation_weight: 1.0,
-                accessed_by_land: true,
-                accessed_by_water: false,
+                terrain_kind: TerrainKind::Normal,
                 movement_difficulty: 0.3,
                 soil_fertility: 1.0,
             },
@@ -106,9 +111,7 @@ fn default_tiles(queue: &mut CommandQueue) {
         bundle: MapTileDefBundle {
             name: "Mountains".into(),
             def: MapTileDefinition {
-                generation_weight: 1.0,
-                accessed_by_land: true,
-                accessed_by_water: false,
+                terrain_kind: TerrainKind::Mountain,
                 movement_difficulty: 0.3,
                 soil_fertility: 1.0,
             },
