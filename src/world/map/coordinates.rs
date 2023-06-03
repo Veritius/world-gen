@@ -1,100 +1,179 @@
-use bevy::prelude::*;
+use std::ops::{Add, Sub, AddAssign, SubAssign};
 
 /// A hex map coordinate that can be in cube or offset form.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum MapCoordinate {
     /// Cube hex coordinates.
-    Cube(CubeCoordinate),
+    Axial(AxialCoordinate),
     /// Offset hex coordinates (doubled!)
-    Offset(OffsetCoordinate),
+    Doubled(DoubledCoordinate),
 }
 
 impl MapCoordinate {
     /// Returns a `CubeCoordinate`, converting from `OffsetCoordinate` if necessary.
-    pub fn cube(&self) -> CubeCoordinate {
+    pub const fn cube(&self) -> AxialCoordinate {
         match self {
-            MapCoordinate::Cube(value) => *value,
-            MapCoordinate::Offset(value) => value.to_cube(),
+            MapCoordinate::Axial(value) => *value,
+            MapCoordinate::Doubled(value) => value.to_axial(),
         }
     }
 
     /// Returns an `OffsetCoordinate`, converting from `CubeCoordinate` if necessary.
-    pub fn offset(&self) -> OffsetCoordinate {
+    pub const fn offset(&self) -> DoubledCoordinate {
         match self {
-            MapCoordinate::Cube(value) => value.to_offset(),
-            MapCoordinate::Offset(value) => *value,
+            MapCoordinate::Axial(value) => value.to_doubled(),
+            MapCoordinate::Doubled(value) => *value,
         }
     }
 }
 
-impl From<CubeCoordinate> for MapCoordinate {
-    fn from(value: CubeCoordinate) -> Self {
-        MapCoordinate::Cube(value)
+impl From<AxialCoordinate> for MapCoordinate {
+    fn from(value: AxialCoordinate) -> Self {
+        MapCoordinate::Axial(value)
     }
 }
 
-impl From<OffsetCoordinate> for MapCoordinate {
-    fn from(value: OffsetCoordinate) -> Self {
-        MapCoordinate::Offset(value)
+impl From<DoubledCoordinate> for MapCoordinate {
+    fn from(value: DoubledCoordinate) -> Self {
+        MapCoordinate::Doubled(value)
     }
 }
 
-/// "Cube" coordinates for a hex grid.
-/// Based on https://www.redblobgames.com/grids/hexagons/#coordinates-cube
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct CubeCoordinate(IVec3);
+/// Axial coordinates for a hex grid.
+/// Based on https://www.redblobgames.com/grids/hexagons/#conversions-axial
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct AxialCoordinate {
+    pub q: i32,
+    pub r: i32,
+}
 
-impl CubeCoordinate {
-    pub fn to_offset(&self) -> OffsetCoordinate {
-        let col = self.0.x;
-        let row = 2 * self.0.y + self.0.x;
-        return OffsetCoordinate(IVec2::new(col, row));
+impl AxialCoordinate {
+    pub const fn new(q: i32, r: i32) -> Self {
+        AxialCoordinate { q, r }
     }
 
-    pub fn neighbors(&self) -> [CubeCoordinate; 6] {
-        let mut precomp = [
-            CubeCoordinate(IVec3::new(1, 0, -1)),
-            CubeCoordinate(IVec3::new(1, -1, 0)),
-            CubeCoordinate(IVec3::new(0, -0, 1)),
-            CubeCoordinate(IVec3::new(-1, 0, 1)),
-            CubeCoordinate(IVec3::new(-1, 1, 0)),
-            CubeCoordinate(IVec3::new(0, 1, -1)),
+    pub const fn to_doubled(&self) -> DoubledCoordinate {
+        let col = 2 * self.q + self.r;
+        let row = self.r;
+        return DoubledCoordinate::new(col, row);
+    }
+
+    pub fn neighbors(&self) -> [AxialCoordinate; 6] {
+        let mut offsets = [
+            AxialCoordinate::new(1, 0),
+            AxialCoordinate::new(1, -1),
+            AxialCoordinate::new(0, -1),
+            AxialCoordinate::new(-1, 0),
+            AxialCoordinate::new(-1, 1),
+            AxialCoordinate::new(0, 1),
         ];
 
-        for x in &mut precomp {
-            x.0 += self.0;
+        for offset in &mut offsets {
+            *offset += *self;
         }
 
-        precomp
+        offsets
+    }
+}
+
+impl Add for AxialCoordinate {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            q: self.q + rhs.q,
+            r: self.r + rhs.r,
+        }
+    }
+}
+
+impl AddAssign for AxialCoordinate {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = *self + rhs;
+    }
+}
+
+impl Sub for AxialCoordinate {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            q: self.q - rhs.q,
+            r: self.r - rhs.r,
+        }
+    }
+}
+
+impl SubAssign for AxialCoordinate {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs;
     }
 }
 
 /// Double-width offset coordinates for a hex grid.
 /// Based on https://www.redblobgames.com/grids/hexagons/#coordinates-doubled
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct OffsetCoordinate(IVec2);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct DoubledCoordinate { col: i32, row: i32 }
 
-impl OffsetCoordinate {
-    pub fn to_cube(&self) -> CubeCoordinate {
-        let q = (self.0.x - self.0.y) / 2;
-        let r = self.0.y;
-        return CubeCoordinate(IVec3::new(q, r, -q-r));
+impl DoubledCoordinate {
+    pub const fn new(col: i32, row: i32) -> Self {
+        DoubledCoordinate { col, row }
+    }
+    
+    pub const fn to_axial(&self) -> AxialCoordinate {
+        let q = (self.col - self.row) / 2;
+        let r = self.row;
+        return AxialCoordinate::new(q, r);
     }
 
-    pub fn neighbors(&self) -> [OffsetCoordinate; 6] {
-        let mut precomp = [
-            OffsetCoordinate(IVec2::new(2, 0)),
-            OffsetCoordinate(IVec2::new(1, -1)),
-            OffsetCoordinate(IVec2::new(-1, -1)),
-            OffsetCoordinate(IVec2::new(-2, 0)),
-            OffsetCoordinate(IVec2::new(-1, 1)),
-            OffsetCoordinate(IVec2::new(1, 1)),
+    pub fn neighbors(&self) -> [DoubledCoordinate; 6] {
+        let mut offsets = [
+            DoubledCoordinate::new(1, 0),
+            DoubledCoordinate::new(1, -1),
+            DoubledCoordinate::new(0, -1),
+            DoubledCoordinate::new(-1, 0),
+            DoubledCoordinate::new(-1, 1),
+            DoubledCoordinate::new(0, 1),
         ];
 
-        for x in &mut precomp {
-            x.0 += self.0;
+        for offset in &mut offsets {
+            *offset += *self;
         }
 
-        precomp
+        offsets
+    }
+}
+
+impl Add for DoubledCoordinate {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            col: self.col + rhs.col,
+            row: self.row + rhs.row,
+        }
+    }
+}
+
+impl AddAssign for DoubledCoordinate {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = *self + rhs;
+    }
+}
+
+impl Sub for DoubledCoordinate {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            col: self.col - rhs.col,
+            row: self.row - rhs.row,
+        }
+    }
+}
+
+impl SubAssign for DoubledCoordinate {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs;
     }
 }
