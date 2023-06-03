@@ -5,6 +5,7 @@ mod people;
 mod definitions;
 mod places;
 mod helpers;
+mod map;
 
 use bevy::ecs::system::CommandQueue;
 use eframe::egui;
@@ -14,7 +15,7 @@ use self::{
     meta::edit_meta_ui,
     people::edit_people_ui,
     definitions::edit_definitions_ui,
-    places::edit_places_ui,
+    places::edit_places_ui, map::edit_map_ui,
 };
 
 use super::AppMemory;
@@ -35,6 +36,7 @@ pub(super) fn edit_ui(
     egui::ScrollArea::horizontal().auto_shrink([false, true]).show(ui, |ui| {
         ui.horizontal(|ui| {
             ui.selectable_value(current_tab, "Meta".to_owned(), "Meta");
+            ui.selectable_value(current_tab, "Map".to_owned(), "Map");
             ui.selectable_value(current_tab, "People".to_owned(), "People");
             ui.selectable_value(current_tab, "Definitions".to_owned(), "Definitions");
             ui.selectable_value(current_tab, "Places".to_owned(), "Places");
@@ -46,6 +48,7 @@ pub(super) fn edit_ui(
     // Tabs
     match current_tab.as_str() {
         "Meta" => edit_meta_ui(ui, memory, queue, sim),
+        "Map" => edit_map_ui(ui, memory, queue, sim),
         "People" => edit_people_ui(ui, memory, queue, sim),
         "Definitions" => edit_definitions_ui(ui, memory, queue, sim),
         "Places" => edit_places_ui(ui, memory, queue, sim),
