@@ -9,6 +9,8 @@ pub struct MapTileDefBundle {
 
 #[derive(Component)]
 pub struct MapTileDefinition {
+    pub generation_weight: f32,
+
     pub accessed_by_land: bool,
     pub accessed_by_water: bool,
 
@@ -19,6 +21,8 @@ pub struct MapTileDefinition {
 impl Default for MapTileDefinition {
     fn default() -> Self {
         Self {
+            generation_weight: 1.0,
+
             accessed_by_land: true,
             accessed_by_water: false,
             

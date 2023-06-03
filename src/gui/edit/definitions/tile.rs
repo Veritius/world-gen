@@ -8,14 +8,20 @@ pub(super) fn tiles_menu(
     sim: &mut SimulationData,
 ) {
     // New humanoid species
-    if ui.button("New tile type").clicked() {
-        queue.push(Spawn {
-            bundle: MapTileDefBundle {
-                name: "A new tile".into(),
-                def: MapTileDefinition::default(),
-            }
-        });
-    }
+    ui.horizontal(|ui| {
+        if ui.button("New tile type").clicked() {
+            queue.push(Spawn {
+                bundle: MapTileDefBundle {
+                    name: "A new tile".into(),
+                    def: MapTileDefinition::default(),
+                }
+            });
+        }
+
+        if ui.button("Add simple tiles").on_hover_text("Adds tiles very much like things you'd find on Earth, ie. forests and mountains.").clicked() {
+            default_tiles(queue);
+        }
+    });
 
     ui.separator();
 
@@ -59,6 +65,12 @@ fn tile_editor(
             ui.add_sized([200.0, 18.0], |ui: &mut egui::Ui| { ui.text_edit_singleline(&mut name.0) });
             ui.end_row();
 
+            ui.label("Random weight");
+            ui.horizontal(|ui| {
+                ui.add(egui::Slider::new(&mut tile.generation_weight, 0.01..=100.0).logarithmic(true).fixed_decimals(2));
+            });
+            ui.end_row();
+
             ui.label("Accessible by ");
             ui.horizontal(|ui| {
                 ui.checkbox(&mut tile.accessed_by_land, "Land");
@@ -74,5 +86,32 @@ fn tile_editor(
             ui.add(egui::Slider::new(&mut tile.soil_fertility, 0.0..=1.5).fixed_decimals(2).step_by(0.01));
             ui.end_row();
         });
+    });
+}
+
+fn default_tiles(queue: &mut CommandQueue) {
+    queue.push(Spawn {
+        bundle: MapTileDefBundle {
+            name: "Forest".into(),
+            def: MapTileDefinition {
+                generation_weight: 1.0,
+                accessed_by_land: true,
+                accessed_by_water: false,
+                movement_difficulty: 0.3,
+                soil_fertility: 1.0,
+            },
+        }
+    });
+    queue.push(Spawn {
+        bundle: MapTileDefBundle {
+            name: "Mountains".into(),
+            def: MapTileDefinition {
+                generation_weight: 1.0,
+                accessed_by_land: true,
+                accessed_by_water: false,
+                movement_difficulty: 0.3,
+                soil_fertility: 1.0,
+            },
+        }
     });
 }
