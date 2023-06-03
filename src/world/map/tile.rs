@@ -9,17 +9,21 @@ pub struct MapTileDefBundle {
 
 #[derive(Component)]
 pub struct MapTileDefinition {
-    pub passable_by_land: bool,
-    pub passable_by_water: bool,
-    pub passable_by_air: bool,
+    pub accessed_by_land: bool,
+    pub accessed_by_water: bool,
+
+    pub movement_difficulty: f32,
+    pub soil_fertility: f32,
 }
 
 impl Default for MapTileDefinition {
     fn default() -> Self {
         Self {
-            passable_by_land: true,
-            passable_by_water: false,
-            passable_by_air: true,
+            accessed_by_land: true,
+            accessed_by_water: false,
+            
+            movement_difficulty: 0.3,
+            soil_fertility: 0.9,
         }
     }
 }

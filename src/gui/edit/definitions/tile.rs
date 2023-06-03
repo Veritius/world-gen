@@ -59,12 +59,19 @@ fn tile_editor(
             ui.add_sized([200.0, 18.0], |ui: &mut egui::Ui| { ui.text_edit_singleline(&mut name.0) });
             ui.end_row();
 
-            ui.label("Passable by");
-            ui.vertical(|ui| {
-                ui.checkbox(&mut tile.passable_by_land, "land");
-                ui.checkbox(&mut tile.passable_by_air, "air");
-                ui.checkbox(&mut tile.passable_by_water, "water");
+            ui.label("Accessible by ");
+            ui.horizontal(|ui| {
+                ui.checkbox(&mut tile.accessed_by_land, "Land");
+                ui.checkbox(&mut tile.accessed_by_water, "Water");
             });
+            ui.end_row();
+
+            ui.label("Movement difficulty");
+            ui.add(egui::Slider::new(&mut tile.movement_difficulty, 0.0..=2.0).fixed_decimals(2).step_by(0.01));
+            ui.end_row();
+
+            ui.label("Soil fertility");
+            ui.add(egui::Slider::new(&mut tile.soil_fertility, 0.0..=1.5).fixed_decimals(2).step_by(0.01));
             ui.end_row();
         });
     });
