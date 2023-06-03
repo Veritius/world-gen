@@ -93,7 +93,7 @@ Ticking by days simulates slowly, but provides a lot of detail, and is best chos
             // Simulation steps
             ui.label(format!("{:?} to simulate", config.timespan));
             ui.horizontal(|ui| {
-                ui.add(egui::Slider::new(&mut config.increments_for_completion, 10..=10_000).logarithmic(true));
+                ui.add(egui::Slider::new(&mut config.increments_for_completion, 10..=100_000).logarithmic(true));
                 const STEPS_BEFORE_WARNING: u32 = 1000;
                 if config.increments_for_completion > STEPS_BEFORE_WARNING {
                     ui.label(egui::RichText::from("⚠").color(egui::Color32::RED)).on_hover_text(
