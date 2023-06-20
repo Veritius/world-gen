@@ -10,16 +10,16 @@ pub enum MapCoordinate {
 }
 
 impl MapCoordinate {
-    /// Returns a `CubeCoordinate`, converting from `OffsetCoordinate` if necessary.
-    pub const fn cube(&self) -> AxialCoordinate {
+    /// Returns an `AxialCoordinate`, converting from `DoubledCoordinate` if necessary.
+    pub const fn axial(&self) -> AxialCoordinate {
         match self {
             MapCoordinate::Axial(value) => *value,
             MapCoordinate::Doubled(value) => value.to_axial(),
         }
     }
 
-    /// Returns an `OffsetCoordinate`, converting from `CubeCoordinate` if necessary.
-    pub const fn offset(&self) -> DoubledCoordinate {
+    /// Returns a `DoubledCoordinate`, converting from `AxialCoordinate` if necessary.
+    pub const fn doubled(&self) -> DoubledCoordinate {
         match self {
             MapCoordinate::Axial(value) => value.to_doubled(),
             MapCoordinate::Doubled(value) => *value,

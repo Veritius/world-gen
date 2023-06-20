@@ -30,7 +30,7 @@ impl MapData {
 
     /// Returns a single map cell, if it exists.
     pub fn cell(&self, coord: MapCoordinate) -> Option<Entity> {
-        let coord = coord.offset();
+        let coord = coord.doubled();
         self.cells.get(&coord).cloned()
     }
 }
