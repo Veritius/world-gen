@@ -76,6 +76,12 @@ impl AxialCoordinate {
     }
 }
 
+impl From<DoubledCoordinate> for AxialCoordinate {
+    fn from(value: DoubledCoordinate) -> Self {
+        value.to_axial()
+    }
+}
+
 impl Add for AxialCoordinate {
     type Output = Self;
 
@@ -141,6 +147,12 @@ impl DoubledCoordinate {
         }
 
         offsets
+    }
+}
+
+impl From<AxialCoordinate> for DoubledCoordinate {
+    fn from(value: AxialCoordinate) -> Self {
+        value.to_doubled()
     }
 }
 

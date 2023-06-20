@@ -37,8 +37,8 @@ impl MapData {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct MapBounds {
-    min: IVec2,
-    max: IVec2,
+    pub min: IVec2,
+    pub max: IVec2,
 }
 
 impl MapBounds {
@@ -57,6 +57,8 @@ impl MapBounds {
 
 #[derive(Component)]
 pub struct MapCell {
-    #[allow(dead_code)]
-    pos: MapCoordinate,
+    /// The position of this cell.
+    pub pos: MapCoordinate,
+    /// The kind of cell this map is. This should be an entity with a `MapTileDefinition` component.
+    pub kind: Entity,
 }
