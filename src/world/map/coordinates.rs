@@ -1,5 +1,7 @@
 use std::ops::{Add, Sub, AddAssign, SubAssign};
 
+use bevy::prelude::Vec2;
+
 /// A hex map coordinate that can be in cube or offset form.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum MapCoordinate {
@@ -73,6 +75,14 @@ impl AxialCoordinate {
         }
 
         offsets
+    }
+
+    pub fn cartesian(&self) -> Vec2 {
+        let sqrt3 = 3.0f32.sqrt();
+
+        let x = 3.0 / 2.0 * self.q as f32;
+        let y = sqrt3 / 2.0 * self.q as f32 + sqrt3 * self.r as f32;
+        return Vec2::new(x, y);
     }
 }
 
