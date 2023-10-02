@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
-use crate::state::SimulationState;
+use crate::params::SimulationState;
 
 /// Adds a UI to control the game state.
 pub fn pause_menu_system(

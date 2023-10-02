@@ -1,6 +1,6 @@
 use std::ops::RangeInclusive;
 use bevy::prelude::*;
-use crate::common::{DisplayName, Birthday};
+use crate::{common::DisplayName, time::CreationDate};
 
 pub const FACTION_INTEREST_RANGE: RangeInclusive<f32> = -10.0..=10.0;
 
@@ -16,5 +16,5 @@ pub struct Faction {
 pub struct FactionBundle {
     pub marker: Faction,
     pub name: DisplayName,
-    pub age: Birthday,
+    pub age: CreationDate,
 }

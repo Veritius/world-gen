@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui::{self, Ui, RichText, Slider}};
-use crate::{common::{DisplayName, Birthday, SimulationTime}, factions::{Faction, FACTION_INTEREST_RANGE}};
+use crate::{common::DisplayName, factions::{Faction, FACTION_INTEREST_RANGE}, time::{SimulationTime, CreationDate}};
 use super::{BeingEdited, EguiEditableComponent};
 
 #[derive(Debug, Resource)]
@@ -33,7 +33,7 @@ pub fn faction_listing_system(
     mut open: ResMut<FactionListWindowOpen>,
     mut commands: Commands,
     time: Res<SimulationTime>,
-    query: Query<(Entity, &DisplayName, &Birthday, Option<&BeingEdited>), With<Faction>>,
+    query: Query<(Entity, &DisplayName, &CreationDate, Option<&BeingEdited>), With<Faction>>,
 ) {
     if !open.0 { return; }
 
@@ -60,7 +60,7 @@ pub fn faction_listing_system(
             .show(ui, |ui| {
                 for (entity, name, birthday, editing) in query.iter() {
                     ui.label(&name.0);
-                    ui.label(format!("{}", time.get_age_str(*birthday)));
+                    ui.label(format!("{}", birthday.0.since_saturating(time.current_day)));
                     ui.horizontal(|ui| {
                         ui.add_enabled_ui(editing.is_none(), |ui| if ui.button("Edit").clicked() {
                             commands.entity(entity).insert(BeingEdited);
@@ -80,14 +80,14 @@ pub fn faction_listing_system(
 pub fn faction_editing_system(
     mut ctxs: EguiContexts,
     mut commands: Commands,
-    mut query: Query<(Entity, &mut Faction, &mut DisplayName, &mut Birthday), With<BeingEdited>>,
+    mut query: Query<(Entity, &mut Faction, &mut DisplayName, &mut CreationDate), With<BeingEdited>>,
     time: Res<SimulationTime>,
 ) {
     for (entity, mut faction, mut display_name, mut age) in query.iter_mut() {
         egui::Window::new(format!("{} ({:?})", display_name.0, entity))
         .show(ctxs.ctx_mut(), |ui| {
             display_name.show_edit_ui(ui, ());
-            age.show_edit_ui(ui, *time);
+            age.show_edit_ui(ui, time.current_day);
 
             ui.separator();
 

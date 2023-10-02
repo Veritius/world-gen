@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::common::{DisplayName, Birthday};
+use crate::{common::DisplayName, time::CreationDate};
 use self::personality::Personality;
 
 pub mod personality;
@@ -12,6 +12,6 @@ pub struct Person;
 pub struct PersonBundle {
     pub marker: Person,
     pub name: DisplayName,
-    pub age: Birthday,
+    pub age: CreationDate,
     pub personality: Personality,
 }

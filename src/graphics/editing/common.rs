@@ -1,5 +1,5 @@
-use bevy_egui::egui::{self, DragValue};
-use crate::common::{DisplayName, Birthday, SimulationTime};
+use bevy_egui::egui::{self, DragValue, emath::Numeric};
+use crate::{common::DisplayName, time::{SimulationInstant, CreationDate}};
 use super::EguiEditableComponent;
 
 impl EguiEditableComponent for DisplayName {
@@ -13,18 +13,18 @@ impl EguiEditableComponent for DisplayName {
     }
 }
 
-impl EguiEditableComponent for Birthday {
-    type ReqData = SimulationTime;
+impl EguiEditableComponent for CreationDate {
+    type ReqData = SimulationInstant;
 
     fn show_edit_ui(&mut self, ui: &mut egui::Ui, time: Self::ReqData) {
         ui.horizontal(|ui| {
-            ui.label("Birth date");
+            ui.label("Age");
             ui.add(DragValue::new(&mut self.0)
             .clamp_range(0.0..=f32::INFINITY)
                 .fixed_decimals(0)
                 .custom_formatter(|n, _| {
-                    let rnd = n as u64;
-                    time.get_age_str(Birthday(rnd))
+                    let instant = SimulationInstant::from_f64(n);
+                    format!("{}", instant.since_saturating(time))
                 })
             );
         });
