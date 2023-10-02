@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_egui::{egui::{menu, TopBottomPanel}, EguiContexts};
+use bevy_egui::{egui::{menu, TopBottomPanel, Color32}, EguiContexts};
 use crate::{state::SimulationState, people::{PersonBundle, personality::Personality}, common::{DisplayName, Age}};
 use super::editing::{BeingEdited, person::PersonListWindowOpen};
 
@@ -17,6 +17,10 @@ pub fn menu_bar_system(
     TopBottomPanel::top("menubar_top_panel").show(ctxs.ctx_mut(), |ui| {
         menu::bar(ui, |ui| {
             ui.menu_button("File", |ui| {
+                if ui.button("Create new world").clicked() {
+                    
+                }
+
                 if ui.button("Load from a file").clicked() {
                     
                 }
@@ -41,7 +45,7 @@ pub fn menu_bar_system(
             });
 
             ui.menu_button("Definitions", |ui| {
-
+                ui.colored_label(Color32::LIGHT_YELLOW, "Work in progress");
             });
         });
     });
