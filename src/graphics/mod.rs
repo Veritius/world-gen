@@ -1,9 +1,11 @@
+mod menubar;
 mod pause;
 
 use bevy::prelude::*;
 use bevy_pancam::PanCam;
 
-use self::pause::pause_menu_system;
+use menubar::menu_bar_system;
+use pause::pause_menu_system;
 
 /// Graphics functionality
 pub struct GraphicsPlugin;
@@ -12,6 +14,7 @@ impl Plugin for GraphicsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, create_camera_system);
         app.add_systems(Update, pause_menu_system);
+        app.add_systems(Update, menu_bar_system);
     }
 }
 

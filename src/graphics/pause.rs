@@ -8,6 +8,10 @@ pub fn pause_menu_system(
     mut next: ResMut<NextState<SimulationState>>,
     mut ctxs: EguiContexts,
 ) {
+    // Only show while running
+    if *state.get() == SimulationState::Setup { return; }
+
+    // Create window
     egui::Window::new("Simulation")
     .title_bar(false)
     .resizable(false)
@@ -24,6 +28,7 @@ pub fn pause_menu_system(
                     next.set(SimulationState::Paused);
                 }
             },
+            _ => panic!()
         }
     });
 }
