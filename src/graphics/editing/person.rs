@@ -31,22 +31,25 @@ pub fn person_listing_system(
         }
 
         // List all people
-        egui::Grid::new("people_list_grid")
-        .striped(true)
+        egui::ScrollArea::vertical()
         .show(ui, |ui| {
-            for (entity, name, age, editing) in query.iter() {
-                ui.label(&name.0);
-                ui.label(format!("{}", age));
-                ui.horizontal(|ui| {
-                    if ui.button("Edit").clicked() {
-                        commands.entity(entity).insert(BeingEdited);
-                    }
-                    if ui.button("Delete").clicked() {
-                        commands.entity(entity).despawn();
-                    }
-                });
-                ui.end_row();
-            }
+            egui::Grid::new("people_list_grid")
+            .striped(true)
+            .show(ui, |ui| {
+                for (entity, name, age, editing) in query.iter() {
+                    ui.label(&name.0);
+                    ui.label(format!("{}", age));
+                    ui.horizontal(|ui| {
+                        if ui.button("Edit").clicked() {
+                            commands.entity(entity).insert(BeingEdited);
+                        }
+                        if ui.button("Delete").clicked() {
+                            commands.entity(entity).despawn();
+                        }
+                    });
+                    ui.end_row();
+                }
+            });
         });
     });
 }
