@@ -1,3 +1,6 @@
+#[cfg(feature="graphics")]
+mod graphics;
+
 use bevy::prelude::*;
 
 fn main() {
@@ -7,8 +10,11 @@ fn main() {
     app.add_plugins(DefaultPlugins);
 
     // Graphics plugins
-    #[cfg(feature="graphics")]
-    app.add_plugins(bevy_egui::EguiPlugin);
+    #[cfg(feature="graphics")] {
+        app.add_plugins(bevy_egui::EguiPlugin);
+        app.add_plugins(bevy_pancam::PanCamPlugin);
+        app.add_plugins(graphics::GraphicsPlugin);
+    }
 
     // Run app
     app.run();
