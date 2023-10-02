@@ -1,6 +1,10 @@
 use std::fmt::Display;
 use bevy::prelude::*;
 
+/// Entities with this component will (probably) not be processed as part of the simulation.
+#[derive(Debug, Clone, Component)]
+pub struct Suspended;
+
 /// A name for an in-simulation entity.
 #[derive(Debug, Clone, PartialEq, Eq, Component, Reflect)]
 pub struct DisplayName(pub String);
