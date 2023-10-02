@@ -1,5 +1,4 @@
 pub mod state;
-pub mod editor;
 
 #[cfg(feature="graphics")]
 mod graphics;

@@ -1,3 +1,4 @@
+mod editing;
 mod menubar;
 mod pause;
 
@@ -12,6 +13,7 @@ pub struct GraphicsPlugin;
 
 impl Plugin for GraphicsPlugin {
     fn build(&self, app: &mut App) {
+        // Basic UI
         app.add_systems(Startup, create_camera_system);
         app.add_systems(Update, pause_menu_system);
         app.add_systems(Update, menu_bar_system);
