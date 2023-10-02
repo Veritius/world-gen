@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use bevy_egui::{egui::{self, Color32, RichText}, EguiContexts};
-use crate::{common::DisplayName, people::personality::{Personality, PERSONALITY_VALUE_RANGE}};
+use bevy_egui::{egui::{self, RichText}, EguiContexts};
+use crate::{common::{DisplayName, Age}, people::personality::{Personality, PERSONALITY_VALUE_RANGE}};
 use super::{BeingEdited, helpers::{titled_slider, titled_text}};
 
 #[derive(Debug, Resource)]
@@ -11,7 +11,7 @@ pub fn person_listing_system(
     mut ctxs: EguiContexts,
     mut open: ResMut<PersonListWindowOpen>,
     mut commands: Commands,
-    query: Query<(Entity, &DisplayName, Option<&BeingEdited>)>,
+    query: Query<(Entity, &DisplayName, &Age, Option<&BeingEdited>)>,
 ) {
     if !open.0 { return; }
 
@@ -31,11 +31,21 @@ pub fn person_listing_system(
         }
 
         // List all people
-        ui.vertical(|ui| {
-            for (entity, name, editing) in query.iter() {
-                if ui.button(&name.0).clicked() {
-                    commands.entity(entity).insert(BeingEdited);
-                }
+        egui::Grid::new("people_list_grid")
+        .striped(true)
+        .show(ui, |ui| {
+            for (entity, name, age, editing) in query.iter() {
+                ui.label(&name.0);
+                ui.label(format!("{}", age));
+                ui.horizontal(|ui| {
+                    if ui.button("Edit").clicked() {
+                        commands.entity(entity).insert(BeingEdited);
+                    }
+                    if ui.button("Delete").clicked() {
+                        commands.entity(entity).despawn();
+                    }
+                });
+                ui.end_row();
             }
         });
     });

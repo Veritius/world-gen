@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use bevy::prelude::*;
 
 /// A name for an in-simulation entity.
@@ -7,5 +8,27 @@ pub struct DisplayName(pub String);
 impl DisplayName {
     pub fn new(name: impl Into<String>) -> Self {
         Self(name.into())
+    }
+}
+
+/// An object's age in days.
+#[derive(Debug, Clone, PartialEq, Component, Reflect)]
+pub struct Age(pub u64);
+
+impl Age {
+    pub fn from_days(days: u64) -> Self {
+        Self(days as u64)
+    }
+
+    pub fn from_years(years: u32) -> Self {
+        Self(years as u64 * 365)
+    }
+}
+
+impl Display for Age {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let years = self.0 / 365;
+        let days = self.0 % 365;
+        f.write_str(&format!("{} years and {} days", years, days))
     }
 }
