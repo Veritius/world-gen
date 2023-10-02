@@ -1,17 +1,15 @@
-pub mod gui;
-pub mod world;
+use bevy::prelude::*;
 
-use eframe::egui;
-use gui::WorldGenApp;
+fn main() {
+    // Bevy plugins
+    // Affected by feature flags
+    let mut app = App::new();
+    app.add_plugins(DefaultPlugins);
 
-fn main() -> Result<(), eframe::Error> {
-    let options = eframe::NativeOptions {
-        initial_window_size: Some(egui::vec2(600.0, 400.0)),
-        ..Default::default()
-    };
-    eframe::run_native(
-        "World Generator",
-        options,
-        Box::new(|_cc| Box::<WorldGenApp>::default()),
-    )
+    // Graphics plugins
+    #[cfg(feature="graphics")]
+    app.add_plugins(bevy_egui::EguiPlugin);
+
+    // Run app
+    app.run();
 }
