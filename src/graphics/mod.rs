@@ -28,7 +28,7 @@ impl Plugin for GraphicsPlugin {
         app.add_systems(Update, faction_listing_system);
 
         // Editing systems
-        app.insert_resource(SimulationSettingsWindowOpen(true));
+        app.insert_resource(SimulationSettingsWindowOpen(false));
         app.add_systems(Update, simulation_parameters_settings_window_system);
         app.add_systems(Update, person_editing_system);
         app.add_systems(Update, faction_editing_system);
