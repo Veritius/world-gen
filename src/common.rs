@@ -29,6 +29,12 @@ impl Display for Age {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let years = self.0 / 365;
         let days = self.0 % 365;
-        f.write_str(&format!("{} years and {} days", years, days))
+        match (years, days) {
+            (0, 1) => f.write_str(&format!("{} day", days)),
+            (0, _) => f.write_str(&format!("{} days", days)),
+            (1, 1) => f.write_str(&format!("{} year and {} day", years, days)),
+            (1, _) => f.write_str(&format!("{} year and {} days", years, days)),
+            (_, _) => f.write_str(&format!("{} years and {} days", years, days)),
+        }
     }
 }
