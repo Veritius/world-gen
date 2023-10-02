@@ -8,6 +8,8 @@ use bevy_pancam::PanCam;
 use menubar::menu_bar_system;
 use pause::pause_menu_system;
 
+use self::editing::person::person_editing_system;
+
 /// Graphics functionality
 pub struct GraphicsPlugin;
 
@@ -17,6 +19,9 @@ impl Plugin for GraphicsPlugin {
         app.add_systems(Startup, create_camera_system);
         app.add_systems(Update, pause_menu_system);
         app.add_systems(Update, menu_bar_system);
+
+        // Editing systems
+        app.add_systems(Update, person_editing_system);
     }
 }
 
