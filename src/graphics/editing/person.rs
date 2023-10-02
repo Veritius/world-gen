@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::{egui::{self, RichText}, EguiContexts};
-use crate::{common::{DisplayName, Age}, people::personality::{Personality, PERSONALITY_VALUE_RANGE}};
+use crate::{common::{DisplayName, Age}, people::{personality::{Personality, PERSONALITY_VALUE_RANGE}, Person}};
 use super::{BeingEdited, helpers::{titled_slider, titled_text}};
 
 #[derive(Debug, Resource)]
@@ -11,7 +11,7 @@ pub fn person_listing_system(
     mut ctxs: EguiContexts,
     mut open: ResMut<PersonListWindowOpen>,
     mut commands: Commands,
-    query: Query<(Entity, &DisplayName, &Age, Option<&BeingEdited>)>,
+    query: Query<(Entity, &DisplayName, &Age, Option<&BeingEdited>), With<Person>>,
 ) {
     if !open.0 { return; }
 
@@ -58,7 +58,7 @@ pub fn person_listing_system(
 pub fn person_editing_system(
     mut ctxs: EguiContexts,
     mut commands: Commands,
-    mut query: Query<(Entity, &mut DisplayName, &mut Personality), With<BeingEdited>>,
+    mut query: Query<(Entity, &mut DisplayName, &mut Personality), (With<Person>, With<BeingEdited>)>,
 ) {
     for (entity, mut display_name, mut personality) in query.iter_mut() {
         egui::Window::new(format!("{} ({:?})", display_name.0, entity))

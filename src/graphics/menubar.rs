@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::{egui::{menu, TopBottomPanel, Color32}, EguiContexts};
-use crate::{state::SimulationState, people::{PersonBundle, personality::Personality}, common::{DisplayName, Age}};
+use crate::{state::SimulationState, people::{PersonBundle, personality::Personality, Person}, common::{DisplayName, Age}};
 use super::editing::{BeingEdited, person::PersonListWindowOpen};
 
 pub fn menu_bar_system(
@@ -37,6 +37,7 @@ pub fn menu_bar_system(
 
                 if ui.button("Add person").clicked() {
                     commands.spawn((BeingEdited, PersonBundle {
+                        marker: Person,
                         name: DisplayName::new("Real McPerson"),
                         age: Age::from_years(18),
                         personality: Personality::default(),

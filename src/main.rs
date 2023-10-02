@@ -1,6 +1,7 @@
 pub mod state;
 pub mod common;
 pub mod people;
+pub mod factions;
 
 #[cfg(feature="graphics")]
 mod graphics;
