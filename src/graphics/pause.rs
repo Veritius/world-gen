@@ -12,7 +12,7 @@ pub fn pause_menu_system(
     if *state.get() == SimulationState::Setup { return; }
 
     // Create window
-    egui::Window::new("Simulation")
+    egui::Window::new("simulation_control_panel")
     .title_bar(false)
     .resizable(false)
     .movable(false)

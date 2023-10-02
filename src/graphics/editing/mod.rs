@@ -1,4 +1,5 @@
 pub mod person;
+pub mod factions;
 
 mod helpers;
 

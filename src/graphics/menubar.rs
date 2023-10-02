@@ -1,14 +1,17 @@
 use bevy::prelude::*;
 use bevy_egui::{egui::{menu, TopBottomPanel, Color32}, EguiContexts};
-use crate::{state::SimulationState, people::{PersonBundle, personality::Personality, Person}, common::{DisplayName, Age}};
-use super::editing::{BeingEdited, person::PersonListWindowOpen};
+use crate::{state::SimulationState, people::{PersonBundle, personality::Personality, Person}, common::{DisplayName, Age}, factions::{FactionBundle, Faction}};
+use super::editing::{BeingEdited, person::PersonListWindowOpen, factions::FactionListWindowOpen};
 
 pub fn menu_bar_system(
     state: Res<State<SimulationState>>,
     mut ctxs: EguiContexts,
     mut commands: Commands,
 
-    mut list_open: ResMut<PersonListWindowOpen>,
+    mut opened_lists: ParamSet<(
+        ResMut<PersonListWindowOpen>,
+        ResMut<FactionListWindowOpen>,
+    )>,
 ) {
     // Only show in setup
     if *state.get() != SimulationState::Setup { return; }
@@ -31,8 +34,8 @@ pub fn menu_bar_system(
             });
 
             ui.menu_button("People", |ui| {
-                if ui.button("Show all people").clicked() {
-                    list_open.0 = true;
+                if ui.button("List people").clicked() {
+                    opened_lists.p0().0 = true;
                 }
 
                 if ui.button("Add person").clicked() {
@@ -45,8 +48,18 @@ pub fn menu_bar_system(
                 }
             });
 
-            ui.menu_button("Definitions", |ui| {
-                ui.colored_label(Color32::LIGHT_YELLOW, "Work in progress");
+            ui.menu_button("Factions", |ui| {
+                if ui.button("List factions").clicked() {
+                    opened_lists.p1().0 = true;
+                }
+
+                if ui.button("Add faction").clicked() {
+                    commands.spawn((BeingEdited, FactionBundle {
+                        marker: Faction,
+                        name: DisplayName::new("A new faction"),
+                        age: Age::from_days(0),
+                    }));
+                }
             });
         });
     });

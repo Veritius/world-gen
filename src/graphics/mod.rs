@@ -8,7 +8,7 @@ use bevy_pancam::PanCam;
 use menubar::menu_bar_system;
 use pause::pause_menu_system;
 
-use self::editing::person::{person_editing_system, person_listing_system, PersonListWindowOpen};
+use self::editing::{person::{person_editing_system, person_listing_system, PersonListWindowOpen}, factions::{FactionListWindowOpen, faction_listing_system}};
 
 /// Graphics functionality
 pub struct GraphicsPlugin;
@@ -23,6 +23,8 @@ impl Plugin for GraphicsPlugin {
         // Listing systems
         app.insert_resource(PersonListWindowOpen(false));
         app.add_systems(Update, person_listing_system);
+        app.insert_resource(FactionListWindowOpen(false));
+        app.add_systems(Update, faction_listing_system);
 
         // Editing systems
         app.add_systems(Update, person_editing_system);
