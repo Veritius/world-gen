@@ -40,9 +40,9 @@ pub fn person_listing_system(
                     ui.label(&name.0);
                     ui.label(format!("{}", age));
                     ui.horizontal(|ui| {
-                        if ui.button("Edit").clicked() {
+                        ui.add_enabled_ui(editing.is_none(), |ui| if ui.button("Edit").clicked() {
                             commands.entity(entity).insert(BeingEdited);
-                        }
+                        });
                         if ui.button("Delete").clicked() {
                             commands.entity(entity).despawn();
                         }
