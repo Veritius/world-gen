@@ -1,17 +1,35 @@
 use bevy::prelude::*;
-use bevy_egui::{egui::{self, RichText}, EguiContexts};
-use crate::{common::{DisplayName, Age}, people::{personality::{Personality, PERSONALITY_VALUE_RANGE}, Person}};
-use super::{BeingEdited, helpers::{titled_slider, titled_text}};
+use bevy_egui::{egui::{self, Ui, RichText, Slider}, EguiContexts};
+use crate::{common::{DisplayName, Birthday, SimulationTime}, people::{personality::{Personality, PERSONALITY_VALUE_RANGE}, Person}};
+use super::{BeingEdited, EguiEditableComponent};
 
 #[derive(Debug, Resource)]
 pub struct PersonListWindowOpen(pub bool);
+
+impl EguiEditableComponent for Personality {
+    type ReqData = Entity;
+
+    fn show_edit_ui(&mut self, ui: &mut Ui, entity: Self::ReqData) {
+        egui::Grid::new(format!("{:?}_personality_editor", entity))
+        .show(ui, |ui| {
+            ui.label("Selflessness");
+            ui.add(Slider::new(&mut self.selflessness, PERSONALITY_VALUE_RANGE));
+            ui.end_row();
+
+            ui.label("Aggression");
+            ui.add(Slider::new(&mut self.aggression, PERSONALITY_VALUE_RANGE));
+            ui.end_row();
+        });
+    }
+}
 
 /// Shows a window of every person
 pub fn person_listing_system(
     mut ctxs: EguiContexts,
     mut open: ResMut<PersonListWindowOpen>,
     mut commands: Commands,
-    query: Query<(Entity, &DisplayName, &Age, Option<&BeingEdited>), With<Person>>,
+    time: Res<SimulationTime>,
+    query: Query<(Entity, &DisplayName, &Birthday, Option<&BeingEdited>), With<Person>>,
 ) {
     if !open.0 { return; }
 
@@ -36,9 +54,9 @@ pub fn person_listing_system(
             egui::Grid::new("people_list_grid")
             .striped(true)
             .show(ui, |ui| {
-                for (entity, name, age, editing) in query.iter() {
+                for (entity, name, birthday, editing) in query.iter() {
                     ui.label(&name.0);
-                    ui.label(format!("{}", age));
+                    ui.label(format!("{}", time.get_age_str(*birthday)));
                     ui.horizontal(|ui| {
                         ui.add_enabled_ui(editing.is_none(), |ui| if ui.button("Edit").clicked() {
                             commands.entity(entity).insert(BeingEdited);
@@ -58,18 +76,21 @@ pub fn person_listing_system(
 pub fn person_editing_system(
     mut ctxs: EguiContexts,
     mut commands: Commands,
-    mut query: Query<(Entity, &mut DisplayName, &mut Personality), (With<Person>, With<BeingEdited>)>,
+    mut query: Query<(Entity, &mut DisplayName, &mut Birthday, &mut Personality), (With<Person>, With<BeingEdited>)>,
+    time: Res<SimulationTime>,
 ) {
-    for (entity, mut display_name, mut personality) in query.iter_mut() {
+    for (entity, mut display_name, mut age, mut personality) in query.iter_mut() {
         egui::Window::new(format!("{} ({:?})", display_name.0, entity))
         .show(ctxs.ctx_mut(), |ui| {
-            titled_text(ui, "Name", &mut display_name.0);
+            display_name.show_edit_ui(ui, ());
+            age.show_edit_ui(ui, *time);
 
             ui.separator();
-            titled_slider(ui, "Selflessness", &mut personality.selflessness, PERSONALITY_VALUE_RANGE);
-            titled_slider(ui, "Aggression", &mut personality.aggression, PERSONALITY_VALUE_RANGE);
+
+            personality.show_edit_ui(ui, entity);
 
             ui.separator();
+            
             ui.horizontal(|ui| {
                 if ui.button("Finish").clicked() {
                     // Remove editing indicator to hide window

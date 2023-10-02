@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use bevy_egui::{egui::{menu, TopBottomPanel, Color32}, EguiContexts};
-use crate::{state::SimulationState, people::{PersonBundle, personality::Personality, Person}, common::{DisplayName, Age}, factions::{FactionBundle, Faction}};
+use bevy_egui::{egui::{menu, TopBottomPanel}, EguiContexts};
+use crate::{state::SimulationState, people::{PersonBundle, personality::Personality, Person}, common::{DisplayName, Birthday}, factions::{FactionBundle, Faction}};
 use super::editing::{BeingEdited, person::PersonListWindowOpen, factions::FactionListWindowOpen};
 
 pub fn menu_bar_system(
@@ -42,7 +42,7 @@ pub fn menu_bar_system(
                     commands.spawn((BeingEdited, PersonBundle {
                         marker: Person,
                         name: DisplayName::new("Real McPerson"),
-                        age: Age::from_years(18),
+                        age: Birthday::from_years(18),
                         personality: Personality::default(),
                     }));
                 }
@@ -55,9 +55,9 @@ pub fn menu_bar_system(
 
                 if ui.button("Add faction").clicked() {
                     commands.spawn((BeingEdited, FactionBundle {
-                        marker: Faction,
+                        marker: Faction::default(),
                         name: DisplayName::new("A new faction"),
-                        age: Age::from_days(0),
+                        age: Birthday::from_days(0),
                     }));
                 }
             });

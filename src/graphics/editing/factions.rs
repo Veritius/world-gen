@@ -1,17 +1,39 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, egui::{self, RichText}};
-use crate::{common::{DisplayName, Age}, factions::Faction};
-use super::BeingEdited;
+use bevy_egui::{EguiContexts, egui::{self, Ui, RichText, Slider}};
+use crate::{common::{DisplayName, Birthday, SimulationTime}, factions::{Faction, FACTION_INTEREST_RANGE}};
+use super::{BeingEdited, EguiEditableComponent};
 
 #[derive(Debug, Resource)]
 pub struct FactionListWindowOpen(pub bool);
+
+impl EguiEditableComponent for Faction {
+    type ReqData = Entity;
+
+    fn show_edit_ui(&mut self, ui: &mut Ui, entity: Self::ReqData) {
+        egui::Grid::new(format!("{:?}_fac_edt_interests", entity))
+        .show(ui, |ui| {
+            ui.label("Profit interest");
+            ui.add(Slider::new(&mut self.profit_interest, FACTION_INTEREST_RANGE));
+            ui.end_row();
+
+            ui.label("Expansion interest");
+            ui.add(Slider::new(&mut self.expansion_interest, FACTION_INTEREST_RANGE));
+            ui.end_row();
+
+            ui.label("Humanitarian interest");
+            ui.add(Slider::new(&mut self.humanitarian_interest, FACTION_INTEREST_RANGE));
+            ui.end_row();
+        });
+    }
+}
 
 /// Shows a window of every person
 pub fn faction_listing_system(
     mut ctxs: EguiContexts,
     mut open: ResMut<FactionListWindowOpen>,
     mut commands: Commands,
-    query: Query<(Entity, &DisplayName, &Age, Option<&BeingEdited>), With<Faction>>,
+    time: Res<SimulationTime>,
+    query: Query<(Entity, &DisplayName, &Birthday, Option<&BeingEdited>), With<Faction>>,
 ) {
     if !open.0 { return; }
 
@@ -36,9 +58,9 @@ pub fn faction_listing_system(
             egui::Grid::new("faction_list_grid")
             .striped(true)
             .show(ui, |ui| {
-                for (entity, name, age, editing) in query.iter() {
+                for (entity, name, birthday, editing) in query.iter() {
                     ui.label(&name.0);
-                    ui.label(format!("{}", age));
+                    ui.label(format!("{}", time.get_age_str(*birthday)));
                     ui.horizontal(|ui| {
                         ui.add_enabled_ui(editing.is_none(), |ui| if ui.button("Edit").clicked() {
                             commands.entity(entity).insert(BeingEdited);
@@ -52,4 +74,41 @@ pub fn faction_listing_system(
             });
         });
     });
+}
+
+/// Creates windows for editing factions
+pub fn faction_editing_system(
+    mut ctxs: EguiContexts,
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut Faction, &mut DisplayName, &mut Birthday), With<BeingEdited>>,
+    time: Res<SimulationTime>,
+) {
+    for (entity, mut faction, mut display_name, mut age) in query.iter_mut() {
+        egui::Window::new(format!("{} ({:?})", display_name.0, entity))
+        .show(ctxs.ctx_mut(), |ui| {
+            display_name.show_edit_ui(ui, ());
+            age.show_edit_ui(ui, *time);
+
+            ui.separator();
+
+            faction.show_edit_ui(ui, entity);
+
+            ui.separator();
+
+            ui.horizontal(|ui| {
+                if ui.button("Finish").clicked() {
+                    // Remove editing indicator to hide window
+                    commands.entity(entity).remove::<BeingEdited>();
+                }
+                if ui.button("Save").clicked() {
+                    // Save to disk
+                    todo!()
+                }
+                if ui.button("Delete").clicked() {
+                    // Despawn the entity
+                    commands.entity(entity).despawn();
+                }
+            });
+        });
+    }
 }

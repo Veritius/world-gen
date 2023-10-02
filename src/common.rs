@@ -1,4 +1,3 @@
-use std::fmt::Display;
 use bevy::prelude::*;
 
 /// Entities with this component will (probably) not be processed as part of the simulation.
@@ -15,30 +14,46 @@ impl DisplayName {
     }
 }
 
-/// An object's age in days.
-#[derive(Debug, Clone, PartialEq, Component, Reflect)]
-pub struct Age(pub u64);
+#[derive(Debug, Default, Clone, Copy, Resource, Reflect)]
+pub struct SimulationTime {
+    pub passed_days: u64,
+}
 
-impl Age {
+impl SimulationTime {
+    pub fn current_day(&self) -> u64 {
+        self.passed_days
+    }
+    
+    pub fn get_age(&self, birthday: Birthday) -> Option<u64> {
+        self.passed_days.checked_sub(birthday.0)
+    }
+
+    pub fn get_age_str(&self, birthday: Birthday) -> String {
+        let age = self.get_age(birthday);
+        if age.is_none() { return "Older than time".to_string(); }
+        let age = age.unwrap();
+        let years = age / 365;
+        let days = age % 365;
+        match (years, days) {
+            (0, 1) => format!("{} day", days),
+            (0, _) => format!("{} days", days),
+            (1, 1) => format!("{} year and {} day", years, days),
+            (1, _) => format!("{} year and {} days", years, days),
+            (_, _) => format!("{} years and {} days", years, days),
+        }
+    }
+}
+
+/// Stores the day the object came into existence. Use with [SimulationTime] to get the age of an entity.
+#[derive(Debug, Clone, Copy, PartialEq, Component, Reflect)]
+pub struct Birthday(pub u64);
+
+impl Birthday {
     pub fn from_days(days: u64) -> Self {
         Self(days as u64)
     }
 
     pub fn from_years(years: u32) -> Self {
         Self(years as u64 * 365)
-    }
-}
-
-impl Display for Age {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let years = self.0 / 365;
-        let days = self.0 % 365;
-        match (years, days) {
-            (0, 1) => f.write_str(&format!("{} day", days)),
-            (0, _) => f.write_str(&format!("{} days", days)),
-            (1, 1) => f.write_str(&format!("{} year and {} day", years, days)),
-            (1, _) => f.write_str(&format!("{} year and {} days", years, days)),
-            (_, _) => f.write_str(&format!("{} years and {} days", years, days)),
-        }
     }
 }
