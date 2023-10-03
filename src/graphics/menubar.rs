@@ -74,9 +74,16 @@ pub fn menu_bar_system(
                     opened_windows.p3().0 = true;
                 }
 
-                if ui.button("Add species").clicked() {
+                if ui.button("Add humanoid").clicked() {
                     commands.spawn((BeingEdited, SpeciesBundle {
-                        species: Species::default(),
+                        species: Species::humanoid_default(),
+                        name: DisplayName::new("A new species"),
+                    }));
+                }
+
+                if ui.button("Add animal").clicked() {
+                    commands.spawn((BeingEdited, SpeciesBundle {
+                        species: Species::animal_default(),
                         name: DisplayName::new("A new species"),
                     }));
                 }

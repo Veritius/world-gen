@@ -30,44 +30,59 @@ pub fn species_listing_system(
             return;
         }
 
+        // Count amounts to hide unnecessary UI
+        let mut humanoids: u32 = 0;
+        let mut animals: u32 = 0;
+        for (_, species, _, _) in query.iter() {
+            if species.is_humanoid {
+                humanoids += 1;
+            } else {
+                animals += 1;
+            }
+        }
+
         // Separate species into humanoids and animals
         egui::ScrollArea::vertical()
             .show(ui, |ui| {
-                ui.collapsing("Humanoids", |ui| {
-                    egui::Grid::new("humanoids_list_grid")
-                    .striped(true)
-                    .show(ui, |ui| {
-                        for (entity, species, display_name, being_edited) in query.iter() {
-                            if !species.is_humanoid { continue; }
-                            add_entry_to_species_list(
-                                ui,
-                                &mut commands,
-                                entity,
-                                // species,
-                                display_name,
-                                being_edited.is_some()
-                            );
-                        }
+                if humanoids != 0 {
+                    ui.collapsing("Humanoids", |ui| {
+                        egui::Grid::new("humanoids_list_grid")
+                        .striped(true)
+                        .show(ui, |ui| {
+                            for (entity, species, display_name, being_edited) in query.iter() {
+                                if !species.is_humanoid { continue; }
+                                add_entry_to_species_list(
+                                    ui,
+                                    &mut commands,
+                                    entity,
+                                    // species,
+                                    display_name,
+                                    being_edited.is_some()
+                                );
+                            }
+                        });
                     });
-                });
+                }
         
-                ui.collapsing("Animals", |ui| {
-                    egui::Grid::new("animals_list_grid")
-                    .striped(true)
-                    .show(ui, |ui| {
-                        for (entity, species, display_name, being_edited) in query.iter() {
-                            if species.is_humanoid { continue; }
-                            add_entry_to_species_list(
-                                ui,
-                                &mut commands,
-                                entity,
-                                // species,
-                                display_name,
-                                being_edited.is_some()
-                            );
-                        }
+                if animals != 0 {
+                    ui.collapsing("Animals", |ui| {
+                        egui::Grid::new("animals_list_grid")
+                        .striped(true)
+                        .show(ui, |ui| {
+                            for (entity, species, display_name, being_edited) in query.iter() {
+                                if species.is_humanoid { continue; }
+                                add_entry_to_species_list(
+                                    ui,
+                                    &mut commands,
+                                    entity,
+                                    // species,
+                                    display_name,
+                                    being_edited.is_some()
+                                );
+                            }
+                        });
                     });
-                });
+                }
             });
     });
 }
@@ -91,6 +106,7 @@ fn add_entry_to_species_list(
             commands.entity(entity).despawn();
         }
     });
+    ui.end_row();
 }
 
 /// Creates windows for editing species
@@ -102,6 +118,7 @@ pub fn species_editing_system(
     for (entity, mut species, mut display_name) in query.iter_mut() {
         egui::Window::new(format!("{} ({:?})", display_name.0, entity))
         .show(ctxs.ctx_mut(), |ui| {
+            // Main controls
             egui::Grid::new(format!("species_{:?}_edit_grid", entity))
             .striped(true)
             .show(ui, |ui| {
