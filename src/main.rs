@@ -3,6 +3,7 @@ pub mod time;
 pub mod common;
 pub mod people;
 pub mod factions;
+pub mod species;
 
 #[cfg(feature="graphics")]
 mod graphics;

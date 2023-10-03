@@ -3,6 +3,7 @@ pub mod common;
 pub mod time;
 pub mod person;
 pub mod factions;
+pub mod species;
 
 use bevy::prelude::*;
 

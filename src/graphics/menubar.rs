@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_egui::{egui::{menu, TopBottomPanel}, EguiContexts};
-use crate::{params::SimulationState, people::{PersonBundle, personality::Personality, Person}, common::DisplayName, factions::{FactionBundle, Faction}, time::{SimulationTime, SimulationDuration, CreationDate}};
-use super::editing::{BeingEdited, person::PersonListWindowOpen, factions::FactionListWindowOpen, params::SimulationSettingsWindowOpen};
+use crate::{params::SimulationState, people::{PersonBundle, personality::Personality, Person}, common::DisplayName, factions::{FactionBundle, Faction}, time::{SimulationTime, SimulationDuration, CreationDate}, species::{SpeciesBundle, Species}};
+use super::editing::{BeingEdited, person::PersonListWindowOpen, factions::FactionListWindowOpen, params::SimulationSettingsWindowOpen, species::SpeciesListWindowOpen};
 
 pub fn menu_bar_system(
     state: Res<State<SimulationState>>,
@@ -10,9 +10,10 @@ pub fn menu_bar_system(
     time: Res<SimulationTime>,
 
     mut opened_windows: ParamSet<(
+        ResMut<SimulationSettingsWindowOpen>,
         ResMut<PersonListWindowOpen>,
         ResMut<FactionListWindowOpen>,
-        ResMut<SimulationSettingsWindowOpen>,
+        ResMut<SpeciesListWindowOpen>,
     )>,
 ) {
     // Only show in setup
@@ -35,13 +36,13 @@ pub fn menu_bar_system(
                 }
 
                 if ui.button("Change parameters").clicked() {
-                    opened_windows.p2().0 = true;
+                    opened_windows.p0().0 = true;
                 }
             });
 
             ui.menu_button("People", |ui| {
                 if ui.button("List people").clicked() {
-                    opened_windows.p0().0 = true;
+                    opened_windows.p1().0 = true;
                 }
 
                 if ui.button("Add person").clicked() {
@@ -56,7 +57,7 @@ pub fn menu_bar_system(
 
             ui.menu_button("Factions", |ui| {
                 if ui.button("List factions").clicked() {
-                    opened_windows.p1().0 = true;
+                    opened_windows.p2().0 = true;
                 }
 
                 if ui.button("Add faction").clicked() {
@@ -64,6 +65,19 @@ pub fn menu_bar_system(
                         marker: Faction::default(),
                         name: DisplayName::new("A new faction"),
                         age: CreationDate(time.current_day - SimulationDuration::years(18)),
+                    }));
+                }
+            });
+
+            ui.menu_button("Species", |ui| {
+                if ui.button("List species").clicked() {
+                    opened_windows.p3().0 = true;
+                }
+
+                if ui.button("Add species").clicked() {
+                    commands.spawn((BeingEdited, SpeciesBundle {
+                        species: Species::default(),
+                        name: DisplayName::new("A new species"),
                     }));
                 }
             });
