@@ -17,7 +17,7 @@ pub struct CreationDate(pub SimulationInstant);
 
 /// In-simulation point in time.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Reflect)]
-pub struct SimulationInstant(u64);
+pub struct SimulationInstant(pub u64);
 
 impl SimulationInstant {
     pub fn since(&self, other: Self) -> Option<SimulationDuration> {
@@ -74,7 +74,7 @@ impl Display for SimulationInstant {
 
 /// In-simulation span of time.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Reflect)]
-pub struct SimulationDuration(u64);
+pub struct SimulationDuration(pub u64);
 
 impl SimulationDuration {
     pub fn days(days: u64) -> Self {
@@ -99,6 +99,22 @@ impl Numeric for SimulationDuration {
 
     fn from_f64(num: f64) -> Self {
         Self(num as u64)
+    }
+}
+
+impl Add for SimulationDuration {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0 + rhs.0)
+    }
+}
+
+impl Sub for SimulationDuration {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0 - rhs.0)
     }
 }
 
