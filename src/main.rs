@@ -8,7 +8,7 @@ pub mod factions;
 mod graphics;
 
 use bevy::prelude::*;
-use params::{SimulationState, TimestepAmount, TimestepDirection};
+use params::{SimulationState, TimestepAmount, TimestepDirection, SimulationRandom};
 use time::SimulationTime;
 
 fn main() {
@@ -26,9 +26,10 @@ fn main() {
 
     // Simulation data
     app.add_state::<SimulationState>();
-    app.add_state::<TimestepDirection>();
-    app.add_state::<TimestepAmount>();
-    app.insert_resource(SimulationTime::default());
+    app.init_resource::<SimulationTime>();
+    app.init_resource::<SimulationRandom>();
+    app.init_resource::<TimestepDirection>();
+    app.init_resource::<TimestepAmount>();
 
     // Run app
     app.run();

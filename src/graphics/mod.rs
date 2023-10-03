@@ -1,7 +1,6 @@
 mod editing;
 mod menubar;
 mod pause;
-mod params;
 
 use bevy::prelude::*;
 use bevy_pancam::PanCam;
@@ -9,7 +8,7 @@ use bevy_pancam::PanCam;
 use menubar::menu_bar_system;
 use pause::pause_menu_system;
 
-use self::{editing::{person::{person_editing_system, person_listing_system, PersonListWindowOpen}, factions::{FactionListWindowOpen, faction_listing_system, faction_editing_system}}, params::{SimulationSettingsWindowOpen, simulation_parameters_settings_window_system}};
+use self::editing::{person::{person_editing_system, person_listing_system, PersonListWindowOpen}, factions::{FactionListWindowOpen, faction_listing_system, faction_editing_system}, params::{SimulationSettingsWindowOpen, simulation_parameters_settings_window_system}};
 
 /// Graphics functionality
 pub struct GraphicsPlugin;

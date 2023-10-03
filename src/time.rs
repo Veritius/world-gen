@@ -64,6 +64,14 @@ impl Sub<SimulationDuration> for SimulationInstant {
     }
 }
 
+impl Display for SimulationInstant {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let year = self.0 / 365;
+        let day = self.0 % 365;
+        f.write_str(&format!("{day}/{year}"))
+    }
+}
+
 /// In-simulation span of time. Cannot be negative.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Reflect)]
 pub struct SimulationDuration(u64);
@@ -78,10 +86,43 @@ impl SimulationDuration {
     }
 }
 
+impl Numeric for SimulationDuration {
+    const INTEGRAL: bool = true;
+
+    const MIN: Self = Self(u64::MIN);
+
+    const MAX: Self = Self(u64::MAX);
+
+    fn to_f64(self) -> f64 {
+        self.0 as f64
+    }
+
+    fn from_f64(num: f64) -> Self {
+        Self(num as u64)
+    }
+}
+
 impl Display for SimulationDuration {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // Get years and days
         let years = self.0 / 365;
         let days = self.0 % 365;
-        f.write_str(&format!("{years} years and {days} days"))
+
+        // Calculate strings
+        fn plurals(amt: u64, word: &'static str) -> Option<String> {
+            match amt {
+                0 => None,
+                1 => Some(format!("{amt} {word}")),
+                _ => Some(format!("{amt} {word}s")),
+            }
+        }
+
+        // Create final string
+        match (plurals(years, "year"), plurals(days, "day")) {
+            (None, None) => f.write_str("0 days"),
+            (None, Some(val)) => f.write_str(&val),
+            (Some(val), None) => f.write_str(&val),
+            (Some(a), Some(b)) => f.write_str(&format!("{a} and {b}")),
+        }
     }
 }

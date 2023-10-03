@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, egui::{self, Ui, RichText, Slider}};
 use crate::{common::DisplayName, factions::{Faction, FACTION_INTEREST_RANGE}, time::{SimulationTime, CreationDate}};
-use super::{BeingEdited, EguiEditableComponent};
+use super::{BeingEdited, EguiEditable};
 
 #[derive(Debug, Resource)]
 pub struct FactionListWindowOpen(pub bool);
 
-impl EguiEditableComponent for Faction {
+impl EguiEditable for Faction {
     type ReqData = Entity;
 
     fn show_edit_ui(&mut self, ui: &mut Ui, entity: Self::ReqData) {

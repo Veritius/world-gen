@@ -1,4 +1,6 @@
+pub mod params;
 pub mod common;
+pub mod time;
 pub mod person;
 pub mod factions;
 
@@ -9,7 +11,7 @@ use bevy::prelude::*;
 pub struct BeingEdited;
 
 /// A component that can be shown in egui. Different to reflection-powered access, this has a manually written UI.
-pub trait EguiEditableComponent {
+pub trait EguiEditable {
     type ReqData;
 
     fn show_edit_ui(&mut self, ui: &mut bevy_egui::egui::Ui, req: Self::ReqData);

@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use bevy_egui::{egui::{self, Ui, RichText, Slider}, EguiContexts};
 use crate::{common::DisplayName, people::{personality::{Personality, PERSONALITY_VALUE_RANGE}, Person}, time::{SimulationTime, CreationDate}};
-use super::{BeingEdited, EguiEditableComponent};
+use super::{BeingEdited, EguiEditable};
 
 #[derive(Debug, Resource)]
 pub struct PersonListWindowOpen(pub bool);
 
-impl EguiEditableComponent for Personality {
+impl EguiEditable for Personality {
     type ReqData = Entity;
 
     fn show_edit_ui(&mut self, ui: &mut Ui, entity: Self::ReqData) {

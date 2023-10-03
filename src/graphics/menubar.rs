@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_egui::{egui::{menu, TopBottomPanel}, EguiContexts};
 use crate::{params::SimulationState, people::{PersonBundle, personality::Personality, Person}, common::DisplayName, factions::{FactionBundle, Faction}, time::{SimulationTime, SimulationDuration, CreationDate}};
-use super::{editing::{BeingEdited, person::PersonListWindowOpen, factions::FactionListWindowOpen}, params::SimulationSettingsWindowOpen};
+use super::editing::{BeingEdited, person::PersonListWindowOpen, factions::FactionListWindowOpen, params::SimulationSettingsWindowOpen};
 
 pub fn menu_bar_system(
     state: Res<State<SimulationState>>,
@@ -34,7 +34,7 @@ pub fn menu_bar_system(
                     
                 }
 
-                if ui.button("Change timestep").clicked() {
+                if ui.button("Change parameters").clicked() {
                     opened_windows.p2().0 = true;
                 }
             });
