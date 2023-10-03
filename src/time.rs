@@ -2,6 +2,8 @@
 
 use std::{ops::{Add, Sub}, fmt::Display};
 use bevy::prelude::*;
+
+#[cfg(feature="graphics")]
 use bevy_egui::egui::emath::Numeric;
 
 /// Information about the simulation's current date.
@@ -32,6 +34,7 @@ impl SimulationInstant {
     }
 }
 
+#[cfg(feature="graphics")]
 impl Numeric for SimulationInstant {
     const INTEGRAL: bool = true;
 
@@ -86,6 +89,7 @@ impl SimulationDuration {
     }
 }
 
+#[cfg(feature="graphics")]
 impl Numeric for SimulationDuration {
     const INTEGRAL: bool = true;
 
