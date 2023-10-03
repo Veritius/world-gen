@@ -35,13 +35,17 @@ impl EguiEditable for CreationDate {
 
     fn show_edit_ui(&mut self, ui: &mut egui::Ui, time: Self::ReqData) {
         ui.horizontal(|ui| {
+
             ui.label("Age");
             ui.add(egui::DragValue::new(&mut self.0)
-            .clamp_range(0.0..=f32::INFINITY)
+                .clamp_range(time.to_f64() as f32..=f32::INFINITY)
                 .fixed_decimals(0)
                 .custom_formatter(|n, _| {
                     let instant = SimulationInstant::from_f64(n);
-                    format!("{}", instant.since_saturating(time))
+                    match instant.since(time) {
+                        Some(val) => format!("{}", val),
+                        None => format!("Older than time!"),
+                    }
                 })
             );
         });

@@ -15,36 +15,36 @@ pub struct SimulationTime {
 #[derive(Debug, Clone, Copy, PartialEq, Component, Reflect)]
 pub struct CreationDate(pub SimulationInstant);
 
-/// In-simulation point in time. Can be negative.
+/// In-simulation point in time.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Reflect)]
-pub struct SimulationInstant(i64);
+pub struct SimulationInstant(u64);
 
 impl SimulationInstant {
     pub fn since(&self, other: Self) -> Option<SimulationDuration> {
         match self.0.checked_sub(other.0) {
-            Some(val) => Some(SimulationDuration(val as u64)),
+            Some(val) => Some(SimulationDuration(val)),
             None => None,
         }
     }
 
     pub fn since_saturating(&self, other: Self) -> SimulationDuration {
-        SimulationDuration(self.0.saturating_sub(other.0) as u64)
+        SimulationDuration(self.0.saturating_sub(other.0))
     }
 }
 
 impl Numeric for SimulationInstant {
     const INTEGRAL: bool = true;
 
-    const MIN: Self = Self(i64::MIN);
+    const MIN: Self = Self(u64::MIN);
 
-    const MAX: Self = Self(i64::MAX);
+    const MAX: Self = Self(u64::MAX);
 
     fn to_f64(self) -> f64 {
         self.0 as f64
     }
 
     fn from_f64(num: f64) -> Self {
-        Self(num as i64)
+        Self(num as u64)
     }
 }
 
@@ -52,7 +52,7 @@ impl Add<SimulationDuration> for SimulationInstant {
     type Output = Self;
 
     fn add(self, rhs: SimulationDuration) -> Self::Output {
-        Self(self.0 + rhs.0 as i64)
+        Self(self.0 + rhs.0)
     }
 }
 
@@ -60,7 +60,7 @@ impl Sub<SimulationDuration> for SimulationInstant {
     type Output = Self;
 
     fn sub(self, rhs: SimulationDuration) -> Self::Output {
-        Self(self.0 - rhs.0 as i64)
+        Self(self.0.saturating_sub(rhs.0))
     }
 }
 
@@ -72,7 +72,7 @@ impl Display for SimulationInstant {
     }
 }
 
-/// In-simulation span of time. Cannot be negative.
+/// In-simulation span of time.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Reflect)]
 pub struct SimulationDuration(u64);
 

@@ -42,6 +42,7 @@ pub fn simulation_parameters_settings_window_system(
                 if ui.button("Reset").clicked() {
                     simulation_time.start_day = SimulationInstant::default();
                 }
+                simulation_time.current_day = simulation_time.start_day;
             });
             ui.end_row();
 
