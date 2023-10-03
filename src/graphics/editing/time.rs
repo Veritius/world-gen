@@ -27,6 +27,9 @@ impl EguiEditable for SimulationDuration {
                 .custom_formatter(|n, _| {
                     let v = n as u64 / 365;
                     format!("{v} years")
+                })
+                .custom_parser(|s| {
+                    Some(s.parse::<f64>().ok()? * 365.0)
                 }));
                 ui.add(egui::DragValue::new(&mut self.0)
                 .speed(0.65)
