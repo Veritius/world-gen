@@ -6,9 +6,6 @@ impl EguiEditable for DisplayName {
     type ReqData = ();
 
     fn show_edit_ui(&mut self, ui: &mut egui::Ui, _: Self::ReqData) {
-        ui.horizontal(|ui| {
-            ui.label("Name");
-            ui.text_edit_singleline(&mut self.0);
-        });
+        ui.text_edit_singleline(&mut self.0);
     }
 }

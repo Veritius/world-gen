@@ -82,8 +82,16 @@ pub fn person_editing_system(
     for (entity, mut display_name, mut age, mut personality) in query.iter_mut() {
         egui::Window::new(format!("{} ({:?})", display_name.0, entity))
         .show(ctxs.ctx_mut(), |ui| {
-            display_name.show_edit_ui(ui, ());
-            age.show_edit_ui(ui, time.current_day);
+            egui::Grid::new(format!("{:?}_fac_meta_grid", entity))
+            .show(ui, |ui| {
+                ui.label("Name");
+                display_name.show_edit_ui(ui, ());
+                ui.end_row();
+
+                ui.label("Age");
+                age.show_edit_ui(ui, time.current_day);
+                ui.end_row();
+            });
 
             ui.separator();
 
