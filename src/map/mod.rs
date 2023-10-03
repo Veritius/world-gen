@@ -7,6 +7,7 @@ pub mod cells;
 use bevy::prelude::*;
 use self::generation::WorldGenerationMethod;
 
+/// Config for the simulation map generation.
 #[derive(Debug, Default, Resource)]
 pub struct SimulationMap {
     pub random_seed: u64,
