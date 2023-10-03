@@ -77,14 +77,14 @@ pub fn menu_bar_system(
                 if ui.button("Add humanoid").clicked() {
                     commands.spawn((BeingEdited, SpeciesBundle {
                         species: Species::humanoid_default(),
-                        name: DisplayName::new("A new species"),
+                        name: DisplayName::new("A new humanoid"),
                     }));
                 }
 
                 if ui.button("Add animal").clicked() {
                     commands.spawn((BeingEdited, SpeciesBundle {
                         species: Species::animal_default(),
-                        name: DisplayName::new("A new species"),
+                        name: DisplayName::new("A new animal"),
                     }));
                 }
             });
