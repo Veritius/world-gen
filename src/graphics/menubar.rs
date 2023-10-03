@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_egui::{egui::{menu, TopBottomPanel}, EguiContexts};
 use crate::{params::SimulationState, people::{PersonBundle, personality::Personality, Person}, common::DisplayName, factions::{FactionBundle, Faction}, time::{SimulationTime, SimulationDuration, CreationDate}, species::{SpeciesBundle, Species}};
-use super::editing::{BeingEdited, person::PersonListWindowOpen, factions::FactionListWindowOpen, params::SimulationSettingsWindowOpen, species::SpeciesListWindowOpen};
+use super::editing::{BeingEdited, person::PersonListWindowOpen, factions::FactionListWindowOpen, params::SimulationSettingsWindowOpen, species::SpeciesListWindowOpen, map::MapConfigWindowOpen};
 
 pub fn menu_bar_system(
     state: Res<State<SimulationState>>,
@@ -11,6 +11,7 @@ pub fn menu_bar_system(
 
     mut opened_windows: ParamSet<(
         ResMut<SimulationSettingsWindowOpen>,
+        ResMut<MapConfigWindowOpen>,
         ResMut<PersonListWindowOpen>,
         ResMut<FactionListWindowOpen>,
         ResMut<SpeciesListWindowOpen>,
@@ -40,9 +41,15 @@ pub fn menu_bar_system(
                 }
             });
 
+            ui.menu_button("Map", |ui| {
+                if ui.button("Generation settings").clicked() {
+                    opened_windows.p1().0 = true;
+                }
+            });
+
             ui.menu_button("People", |ui| {
                 if ui.button("List people").clicked() {
-                    opened_windows.p1().0 = true;
+                    opened_windows.p2().0 = true;
                 }
 
                 if ui.button("Add person").clicked() {
@@ -57,7 +64,7 @@ pub fn menu_bar_system(
 
             ui.menu_button("Factions", |ui| {
                 if ui.button("List factions").clicked() {
-                    opened_windows.p2().0 = true;
+                    opened_windows.p3().0 = true;
                 }
 
                 if ui.button("Add faction").clicked() {
@@ -71,7 +78,7 @@ pub fn menu_bar_system(
 
             ui.menu_button("Species", |ui| {
                 if ui.button("List species").clicked() {
-                    opened_windows.p3().0 = true;
+                    opened_windows.p4().0 = true;
                 }
 
                 if ui.button("Add humanoid").clicked() {

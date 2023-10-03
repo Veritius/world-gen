@@ -10,8 +10,9 @@ pub mod species;
 mod graphics;
 
 use bevy::prelude::*;
-use params::{SimulationState, TimestepAmount, TimestepDirection, SimulationRandom};
 use time::SimulationTime;
+use map::SimulationMap;
+use params::{SimulationState, TimestepAmount, TimestepDirection};
 
 fn main() {
     // Bevy plugins
@@ -29,7 +30,7 @@ fn main() {
     // Simulation data
     app.add_state::<SimulationState>();
     app.init_resource::<SimulationTime>();
-    app.init_resource::<SimulationRandom>();
+    app.init_resource::<SimulationMap>();
     app.init_resource::<TimestepDirection>();
     app.init_resource::<TimestepAmount>();
 

@@ -1,5 +1,15 @@
 //! The world map.
 
+pub mod coordinates;
 pub mod generation;
-pub mod cell;
-pub mod create;
+pub mod cells;
+
+use bevy::prelude::*;
+use self::generation::WorldGenerationMethod;
+
+#[derive(Debug, Default, Resource)]
+pub struct SimulationMap {
+    pub random_seed: u64,
+    pub gen_method: WorldGenerationMethod,
+    pub map_size: UVec2,
+}
