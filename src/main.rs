@@ -1,6 +1,7 @@
 pub mod params;
 pub mod time;
 pub mod common;
+pub mod map;
 pub mod people;
 pub mod factions;
 pub mod species;
