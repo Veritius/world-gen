@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use bevy::prelude::*;
 use super::coordinates::HexCoordinate;
 
-/// A group of map cells, for fast lookup and organisation.
+/// A collection of map cells, for fast lookup and organisation.
 #[derive(Debug, Default, Component)]
 pub struct MapLayer {
     pub cells: BTreeMap<HexCoordinate, Entity>,
@@ -19,7 +19,3 @@ pub struct MapCell {
     pub terrain_rockiness: f32,
     pub movement_difficulty: f32,
 }
-
-/// Raised when a new map layer is first created.
-#[derive(Debug, Event)]
-pub struct MapLayerCreatedEvent(pub Entity);

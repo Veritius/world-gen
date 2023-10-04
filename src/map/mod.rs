@@ -5,7 +5,7 @@ pub mod generation;
 pub mod cells;
 
 use bevy::prelude::*;
-use self::generation::*;
+use self::generation::{*, initial::generation_dispatch_system};
 
 /// Config for the simulation map generation.
 #[derive(Debug, Default, Resource)]
@@ -16,6 +16,8 @@ pub struct SimulationMap {
 }
 
 pub fn add_map_code_to_app(app: &mut App) {
-    app.add_event::<ClearAndRegenerateMapEvent>();
+    app.add_event::<RegenerateMapEvent>();
     app.init_resource::<SimulationMap>();
+
+    app.add_systems(Update, generation_dispatch_system);
 }

@@ -1,3 +1,5 @@
+pub(in super::super) mod initial;
+
 use bevy::prelude::*;
 
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
@@ -8,4 +10,4 @@ pub enum WorldGenerationMethod {
 
 /// Raise to clear all map cells and regenerate the world.
 #[derive(Debug, Event)]
-pub struct ClearAndRegenerateMapEvent;
+pub struct RegenerateMapEvent;
