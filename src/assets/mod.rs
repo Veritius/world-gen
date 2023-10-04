@@ -1,13 +1,17 @@
 //! Asset types loaded by world-gen.
 
+pub mod presets;
 pub mod wordsets;
 
 use bevy::prelude::*;
 use bevy_common_assets::yaml::YamlAssetPlugin;
 
+use self::presets::*;
 use self::wordsets::*;
 
 pub fn setup_assets_for_app(app: &mut App) {
+    app.add_plugins(YamlAssetPlugin::<FactionPreset>::new(&["faction.preset.yml"]));
+    app.add_plugins(YamlAssetPlugin::<SpeciesPreset>::new(&["species.preset.yml"]));
     app.add_plugins(YamlAssetPlugin::<WordSet>::new(&["wordset.yml"]));
 
     // Load data on startup
@@ -26,6 +30,7 @@ fn load_data_folder_on_startup_system(
 ) {
     if marker.is_none() { return; }
     *handles = asset_server.load_folder("data")
+        // TODO: Error tolerance
         .expect("Failed while loading items in folder");
     
 }
