@@ -1,17 +1,13 @@
 //! Asset types loaded by world-gen.
 
-pub mod presets;
 pub mod wordsets;
 
 use bevy::prelude::*;
 use bevy_common_assets::yaml::YamlAssetPlugin;
 
-use self::presets::*;
 use self::wordsets::*;
 
 pub fn setup_assets_for_app(app: &mut App) {
-    app.add_plugins(YamlAssetPlugin::<FactionPreset>::new(&["faction.preset.yml"]));
-    app.add_plugins(YamlAssetPlugin::<SpeciesPreset>::new(&["species.preset.yml"]));
     app.add_plugins(YamlAssetPlugin::<WordSet>::new(&["wordset.yml"]));
 
     // Load data on startup
