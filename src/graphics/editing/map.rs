@@ -52,5 +52,10 @@ pub fn map_config_window_system(
             });
             ui.end_row();
         });
+
+        ui.separator();
+        if ui.button("Finish").clicked() {
+            window_open.0 = false;
+        }
     });
 }

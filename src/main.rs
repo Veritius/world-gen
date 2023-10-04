@@ -10,8 +10,8 @@ pub mod species;
 mod graphics;
 
 use bevy::prelude::*;
+use map::add_map_code_to_app;
 use time::SimulationTime;
-use map::SimulationMap;
 use params::{SimulationState, TimestepAmount, TimestepDirection};
 
 fn main() {
@@ -30,9 +30,11 @@ fn main() {
     // Simulation data
     app.add_state::<SimulationState>();
     app.init_resource::<SimulationTime>();
-    app.init_resource::<SimulationMap>();
     app.init_resource::<TimestepDirection>();
     app.init_resource::<TimestepAmount>();
+    
+    // Simulation components
+    add_map_code_to_app(&mut app);
 
     // Run app
     app.run();
