@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
-use crate::map::{SimulationMap, generation::WorldGenerationMethod};
+use crate::map::{SimulationMap, generation::{WorldGenerationMethod, RunningMapGenerationTask, RegenerateMapEvent}};
 
 #[derive(Debug, Resource)]
 pub struct MapConfigWindowOpen(pub bool);
@@ -9,6 +9,8 @@ pub fn map_config_window_system(
     mut ctxs: EguiContexts,
     mut window_open: ResMut<MapConfigWindowOpen>,
     mut map_config: ResMut<SimulationMap>,
+    running_task: Option<Res<RunningMapGenerationTask>>,
+    mut regen_events: EventWriter<RegenerateMapEvent>,
 ) {
     if !window_open.0 { return; }
 
@@ -54,8 +56,31 @@ pub fn map_config_window_system(
         });
 
         ui.separator();
-        if ui.button("Finish").clicked() {
-            window_open.0 = false;
-        }
+        ui.horizontal(|ui| {
+            if ui.button("Finish").clicked() {
+                window_open.0 = false;
+            }
+
+            ui.add_enabled_ui(running_task.is_none(), |ui| {
+                if ui.button("Generate").clicked() {
+                    regen_events.send(RegenerateMapEvent);
+                }
+            });
+        });
+    });
+}
+
+pub fn generation_progress_window_system(
+    mut ctxs: EguiContexts,
+    task: Option<Res<RunningMapGenerationTask>>,
+) {
+    if task.is_none() { return; }
+    let task = task.unwrap();
+    let (progress, status) = task.completion.lock().unwrap().clone();
+
+    egui::Window::new("Map generation progress")
+    .show(ctxs.ctx_mut(), |ui| {
+        ui.add(egui::ProgressBar::new(progress));
+        ui.label(status);
     });
 }
