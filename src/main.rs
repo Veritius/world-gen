@@ -1,3 +1,4 @@
+pub mod asset_types;
 pub mod params;
 pub mod time;
 pub mod common;
@@ -9,6 +10,7 @@ pub mod species;
 #[cfg(feature="graphics")]
 mod graphics;
 
+use asset_types::setup_assets_for_app;
 use bevy::prelude::*;
 use map::add_map_code_to_app;
 use time::SimulationTime;
@@ -26,6 +28,9 @@ fn main() {
         app.add_plugins(bevy_pancam::PanCamPlugin);
         app.add_plugins(graphics::GraphicsPlugin);
     }
+    
+    // Asset loading
+    setup_assets_for_app(&mut app);
 
     // Simulation data
     app.add_state::<SimulationState>();
