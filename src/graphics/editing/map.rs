@@ -83,6 +83,7 @@ pub fn generation_progress_window_system(
         ui.add(egui::ProgressBar::new(progress).show_percentage().animate(true));
         ui.add_space(4.0);
         ui.horizontal(|ui| {
+            // TODO: allow cancelling the task
             ui.add_enabled(false, egui::Button::new("Abort"));
             /* if ui.button("Abort").clicked() {
 
