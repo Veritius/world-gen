@@ -80,7 +80,14 @@ pub fn generation_progress_window_system(
 
     egui::Window::new("Map generation progress")
     .show(ctxs.ctx_mut(), |ui| {
-        ui.add(egui::ProgressBar::new(progress));
-        ui.label(status);
+        ui.add(egui::ProgressBar::new(progress).show_percentage().animate(true));
+        ui.add_space(4.0);
+        ui.horizontal(|ui| {
+            if ui.button("Abort").clicked() {
+                
+            }
+
+            ui.label(status);
+        });
     });
 }

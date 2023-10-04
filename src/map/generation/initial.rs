@@ -1,5 +1,5 @@
 use std::sync::{Arc, Mutex};
-use bevy::{prelude::*, tasks::{Task, AsyncComputeTaskPool}};
+use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
 use crate::map::{SimulationMap, cells::{MapLayer, MapCell}};
 use super::{RegenerateMapEvent, WorldGenerationMethod, continent::single_continent, RunningMapGenerationTask};
 
