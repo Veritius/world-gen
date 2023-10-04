@@ -1,4 +1,4 @@
-pub mod asset_types;
+pub mod assets;
 pub mod params;
 pub mod time;
 pub mod common;
@@ -10,7 +10,7 @@ pub mod species;
 #[cfg(feature="graphics")]
 mod graphics;
 
-use asset_types::setup_assets_for_app;
+use assets::setup_assets_for_app;
 use bevy::prelude::*;
 use map::add_map_code_to_app;
 use time::SimulationTime;
