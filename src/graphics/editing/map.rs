@@ -24,12 +24,12 @@ pub fn map_config_window_system(
             ui.horizontal(|ui| {
                 ui.add(egui::DragValue::new(&mut map_config.random_seed)
                     .custom_formatter(|n, _| {
-                        let n = n as u64;
+                        let n = n as u32;
                         format!("{n:X}")
                     })
                     .custom_parser(|s| i64::from_str_radix(s, 16).map(|n| n as f64).ok()));
                 if ui.button("New seed").clicked() {
-                    map_config.random_seed = fastrand::u64(u64::MIN..=u64::MAX);
+                    map_config.random_seed = fastrand::u32(u32::MIN..=u32::MAX);
                 }
             });
             ui.end_row();

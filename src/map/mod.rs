@@ -10,7 +10,7 @@ use self::generation::{*, initial::generation_dispatch_system};
 /// Config for the simulation map generation.
 #[derive(Debug, Default, Resource)]
 pub struct SimulationMap {
-    pub random_seed: u64,
+    pub random_seed: u32,
     pub gen_method: WorldGenerationMethod,
     pub map_size: UVec2,
 }
