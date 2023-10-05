@@ -3,7 +3,7 @@ pub(in super::super) mod initial;
 mod continent;
 
 use std::sync::{Arc, Mutex};
-use bevy::{prelude::*, tasks::Task};
+use bevy::{prelude::*, tasks::Task, ecs::system::CommandQueue};
 
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub enum WorldGenerationMethod {
@@ -23,4 +23,4 @@ pub struct RunningMapGenerationTask {
     task: Task<FinishedMapGenerationTask>,
 }
 
-struct FinishedMapGenerationTask(pub World);
+struct FinishedMapGenerationTask(pub CommandQueue);

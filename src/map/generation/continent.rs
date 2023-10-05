@@ -1,4 +1,4 @@
-use bevy::{prelude::*, tasks::{Task, TaskPool, AsyncComputeTaskPool}};
+use bevy::{prelude::*, tasks::{Task, TaskPool, AsyncComputeTaskPool}, ecs::system::CommandQueue};
 use super::FinishedMapGenerationTask;
 
 const PROCESSING_FRAGMENT_SIZE: u32 = 64;
@@ -9,7 +9,7 @@ pub(super) fn single_continent(
     size: UVec2,
 ) -> Task<FinishedMapGenerationTask> {
     tasks.spawn(async move {
-        let mut world = World::new();
+        let mut commands = CommandQueue::default();
         let task_pool = TaskPool::new();
 
         // Divide task into fragments for concurrent processing
@@ -32,6 +32,6 @@ pub(super) fn single_continent(
             }
         });
 
-        FinishedMapGenerationTask(world)
+        FinishedMapGenerationTask(commands)
     })
 }
