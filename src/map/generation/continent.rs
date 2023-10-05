@@ -32,8 +32,23 @@ pub(super) fn single_continent(
         // Tasks for all fragments
         task_pool.scope(|s| {
             for (x, y) in iter {
-                s.spawn(async {
-                    todo!()
+                s.spawn(async move {
+                    // Function for determining bounds
+                    fn defragment(cell: u32, size: u32) -> u32 {
+                        if size % PROCESSING_FRAGMENT_SIZE == 0 {
+                            return PROCESSING_FRAGMENT_SIZE;
+                        }
+                        
+                        if cell == 0 {
+                            return size.min(PROCESSING_FRAGMENT_SIZE);
+                        }
+
+                        return size - ((cell - 1) * PROCESSING_FRAGMENT_SIZE);
+                    }
+
+                    // Determine how many cells in this fragment should be generated
+                    let bx = defragment(x, size.x);
+                    let by = defragment(y, size.y);
                 });
             }
         });
