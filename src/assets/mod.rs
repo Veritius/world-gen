@@ -8,6 +8,7 @@ use bevy_common_assets::yaml::YamlAssetPlugin;
 use self::wordsets::*;
 
 pub fn setup_assets_for_app(app: &mut App) {
+    // Add asset types
     app.add_plugins(YamlAssetPlugin::<WordSet>::new(&["wordset.yml"]));
 
     // Load data on startup
