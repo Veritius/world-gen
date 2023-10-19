@@ -1,6 +1,6 @@
 pub(in super::super) mod initial;
 
-mod continent;
+mod terrain;
 
 use std::sync::{Arc, Mutex};
 use bevy::{prelude::*, tasks::Task, ecs::system::CommandQueue};
@@ -23,4 +23,4 @@ pub struct RunningMapGenerationTask {
     task: Task<FinishedMapGenerationTask>,
 }
 
-struct FinishedMapGenerationTask(pub CommandQueue);
+struct FinishedMapGenerationTask(pub Box<[CommandQueue]>);
