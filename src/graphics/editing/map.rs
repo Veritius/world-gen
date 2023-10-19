@@ -33,7 +33,7 @@ pub fn map_config_window_system(
                 }
             });
             ui.end_row();
-            
+
             // World generator method selection
             ui.label("World generator");
             egui::ComboBox::new("map_world_gen", "")
@@ -48,9 +48,9 @@ pub fn map_config_window_system(
             // Map size
             ui.label("Map size");
             ui.horizontal(|ui| {
-                ui.add(egui::DragValue::new(&mut map_config.map_size.x).suffix('c'));
+                ui.add(egui::DragValue::new(&mut map_config.map_size.x).clamp_range(1..=u32::MAX).suffix(" cells"));
                 ui.label("by");
-                ui.add(egui::DragValue::new(&mut map_config.map_size.y).suffix('c'));
+                ui.add(egui::DragValue::new(&mut map_config.map_size.y).clamp_range(1..=u32::MAX).suffix(" cells"));
             });
             ui.end_row();
         });
