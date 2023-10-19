@@ -12,13 +12,28 @@ pub(super) fn single_continent(
     size: UVec2,
 ) -> Task<FinishedMapGenerationTask> {
     tasks.spawn(async move {
+        debug_assert_ne!(size.x, 0);
+        debug_assert_ne!(size.y, 0);
+
         let mut commands = CommandQueue::default();
         let task_pool = TaskPool::new();
 
         // Divide task into fragments for concurrent processing
-        fn fragment(x: u32) -> u32 { (x / PROCESSING_FRAGMENT_SIZE) + if (x % PROCESSING_FRAGMENT_SIZE) > 0 { 1 } else { 0 } }
+        fn fragment(x: u32) -> u32 {
+            if x <= PROCESSING_FRAGMENT_SIZE { return 0 }
+            if x % PROCESSING_FRAGMENT_SIZE == 0 {
+                return (x / PROCESSING_FRAGMENT_SIZE) - 1
+            }
+            return x / PROCESSING_FRAGMENT_SIZE
+        }
+
         let fx = fragment(size.x);
         let fy = fragment(size.y);
+
+        debug_assert_eq!(fragment(64), 0);
+        debug_assert_eq!(fragment(65), 1);
+        debug_assert_eq!(fragment(128), 1);
+        debug_assert_eq!(fragment(129), 2);
 
         // Iterator that returns all fragments
         let iter = (0..=fx)
@@ -33,17 +48,11 @@ pub(super) fn single_continent(
         task_pool.scope(|s| {
             for (x, y) in iter {
                 s.spawn(async move {
-                    // Function for determining bounds
-                    fn defragment(cell: u32, size: u32) -> u32 {
-                        if size % PROCESSING_FRAGMENT_SIZE == 0 {
-                            return PROCESSING_FRAGMENT_SIZE;
-                        }
-                        
-                        if cell == 0 {
-                            return size.min(PROCESSING_FRAGMENT_SIZE);
-                        }
-
-                        return size - ((cell - 1) * PROCESSING_FRAGMENT_SIZE);
+                    // Function for determining how many cells should be generated in this task
+                    fn defragment(i: u32, s: u32) -> u32 {
+                        if s <= PROCESSING_FRAGMENT_SIZE { return s }
+                        if fragment(s) > i { return PROCESSING_FRAGMENT_SIZE }
+                        return s - (i * PROCESSING_FRAGMENT_SIZE)
                     }
 
                     // Determine how many cells in this fragment should be generated
