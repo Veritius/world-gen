@@ -20,7 +20,11 @@ pub struct RunningMapGenerationTask {
     /// Percent completed, from 0.0 to 1.0.
     /// Intended to be quickly mutated by the processing thread, and read by the UI.
     pub completion: Arc<Mutex<(f32, String)>>,
-    task: Task<FinishedMapGenerationTask>,
+    task: MapGenerationTaskStatus,
 }
 
-struct FinishedMapGenerationTask(pub Box<[CommandQueue]>);
+enum MapGenerationTaskStatus {
+    Terrain(TaskCommandQueues)
+}
+
+type TaskCommandQueues = Task<Box<[CommandQueue]>>;

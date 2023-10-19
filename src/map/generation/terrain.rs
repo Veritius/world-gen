@@ -1,6 +1,7 @@
 use bevy::{prelude::*, tasks::{Task, TaskPool, AsyncComputeTaskPool}, ecs::system::CommandQueue};
 use fastrand::Rng;
-use super::FinishedMapGenerationTask;
+
+use super::TaskCommandQueues;
 
 const PROCESSING_FRAGMENT_SIZE: u32 = 64;
 const SEA_LEVEL: f64 = 0.0;
@@ -42,7 +43,7 @@ fn generic_continent_generation_task(
     seed: u32,
     size: UVec2,
     generator: impl Fn(&mut CommandQueue, &mut Rng, UVec2) + Copy + Send + 'static,
-) -> Task<FinishedMapGenerationTask> {
+) -> TaskCommandQueues {
     tasks.spawn(async move {
         debug_assert_ne!(size.x, 0);
         debug_assert_ne!(size.y, 0);
@@ -88,7 +89,7 @@ fn generic_continent_generation_task(
         });
 
         // Return commands
-        FinishedMapGenerationTask(commands.into())
+        commands.into()
     })
 }
 
@@ -96,6 +97,6 @@ pub(super) fn single_continent(
     tasks: &AsyncComputeTaskPool,
     seed: u32,
     size: UVec2,
-) -> Task<FinishedMapGenerationTask> {
+) -> TaskCommandQueues {
     generic_continent_generation_task(tasks, seed, size, |x,y,z|{})
 }

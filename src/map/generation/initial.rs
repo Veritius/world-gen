@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
 use crate::map::{SimulationMap, cells::{MapLayer, MapCell}};
-use super::{RegenerateMapEvent, WorldGenerationMethod, terrain::single_continent, RunningMapGenerationTask};
+use super::{RegenerateMapEvent, WorldGenerationMethod, terrain::single_continent, RunningMapGenerationTask, MapGenerationTaskStatus};
 
 pub fn generation_dispatch_system(
     mut commands: Commands,
@@ -27,5 +27,8 @@ pub fn generation_dispatch_system(
     };
 
     // Add resource
-    commands.insert_resource(RunningMapGenerationTask { completion, task });
+    commands.insert_resource(RunningMapGenerationTask {
+        completion,
+        task: MapGenerationTaskStatus::Terrain(task)
+    });
 }
