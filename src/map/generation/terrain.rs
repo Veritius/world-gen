@@ -14,11 +14,14 @@ fn fragment(x: u32) -> u32 {
     return x / PROCESSING_FRAGMENT_SIZE
 }
 
-// Function for determining how many cells should be generated in this task
-fn defragment(i: u32, s: u32) -> u32 {
-    if s <= PROCESSING_FRAGMENT_SIZE { return s }
-    if fragment(s) > i { return PROCESSING_FRAGMENT_SIZE }
-    return s - (i * PROCESSING_FRAGMENT_SIZE)
+// Determine how many cells to generate per fragment, and the coordinate offset
+fn defragment(i: u32, s: u32) -> (u32, u32) {
+    if s <= PROCESSING_FRAGMENT_SIZE { return (s, 0) }
+    if fragment(s) > i { return (PROCESSING_FRAGMENT_SIZE, PROCESSING_FRAGMENT_SIZE * i) }
+    return (
+        s - (i * PROCESSING_FRAGMENT_SIZE),
+        (i * PROCESSING_FRAGMENT_SIZE),
+    )
 }
 
 #[test]
@@ -29,9 +32,9 @@ fn check_fragmentation_math() {
     assert_eq!(fragment(PROCESSING_FRAGMENT_SIZE * 2), 1);
     assert_eq!(fragment((PROCESSING_FRAGMENT_SIZE * 2) + 1), 2);
 
-    assert_eq!(defragment(0, PROCESSING_FRAGMENT_SIZE - 1), PROCESSING_FRAGMENT_SIZE - 1);
-    assert_eq!(defragment(0, PROCESSING_FRAGMENT_SIZE), PROCESSING_FRAGMENT_SIZE);
-    assert_eq!(defragment(1, PROCESSING_FRAGMENT_SIZE + 1), 1);
+    assert_eq!(defragment(0, PROCESSING_FRAGMENT_SIZE - 1), (PROCESSING_FRAGMENT_SIZE - 1, 0));
+    assert_eq!(defragment(0, PROCESSING_FRAGMENT_SIZE), (PROCESSING_FRAGMENT_SIZE, 0));
+    assert_eq!(defragment(1, PROCESSING_FRAGMENT_SIZE + 1), (1, PROCESSING_FRAGMENT_SIZE));
 }
 
 fn generic_continent_generation_task(
@@ -57,7 +60,7 @@ fn generic_continent_generation_task(
 
         // Tasks for all fragments
         let commands = task_pool.scope(|s| {
-            for (x, y) in iter {
+            for (fx, fy) in iter {
                 s.spawn(async move {
                     // Create command queue
                     let mut commands = CommandQueue::default();
@@ -65,13 +68,17 @@ fn generic_continent_generation_task(
                     random.seed(seed.into());
 
                     // Determine how many cells in this fragment should be generated
-                    let bx = defragment(x, size.x);
-                    let by = defragment(y, size.y);
+                    let (bx, ox) = defragment(fx, size.x);
+                    let (by, oy) = defragment(fy, size.y);
 
                     // Run generation function on all cells
-                    for x in 0..=bx {
-                        for y in 0..=by {
-                            (generator)(&mut commands, &mut random, size)
+                    for cx in 0..=bx {
+                        for cy in 0..=by {
+                            let coordinates = UVec2 {
+                                x: ox+cx,
+                                y: oy+cy,
+                            };
+                            (generator)(&mut commands, &mut random, coordinates)
                         }
                     }
 
@@ -90,5 +97,5 @@ pub(super) fn single_continent(
     seed: u32,
     size: UVec2,
 ) -> Task<FinishedMapGenerationTask> {
-    generic_continent_generation_task(tasks, seed, size, |x,y,z|{ todo!() })
+    generic_continent_generation_task(tasks, seed, size, |x,y,z|{})
 }
