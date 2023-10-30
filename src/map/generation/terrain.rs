@@ -1,4 +1,6 @@
-use bevy::{prelude::*, tasks::{Task, TaskPool, AsyncComputeTaskPool}, ecs::system::CommandQueue};
+use std::hash::{Hasher, self};
+
+use bevy::{prelude::*, tasks::{Task, TaskPool, AsyncComputeTaskPool}, ecs::system::CommandQueue, utils::AHasher};
 use fastrand::Rng;
 
 use super::TaskCommandQueues;
@@ -65,8 +67,16 @@ fn generic_continent_generation_task(
                 s.spawn(async move {
                     // Create command queue
                     let mut commands = CommandQueue::default();
+
+                    // Create random generator
+                    // By first using a hasher and passing in our 'seed' and the fragment coordinates
+                    // we can generate distinct yet deterministic results for each fragment
                     let mut random = fastrand::Rng::default();
-                    random.seed(seed.into());
+                    let mut hasher = AHasher::default();
+                    hasher.write_u32(seed);
+                    hasher.write_u32(fx);
+                    hasher.write_u32(fy);
+                    random.seed(hasher.finish());
 
                     // Determine how many cells in this fragment should be generated
                     let (bx, ox) = defragment(fx, size.x);
